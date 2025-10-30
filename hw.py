@@ -28,5 +28,6 @@ def practice_5():
     a = input()
     b = input()
     c = input()
+    print(a+b+c)
 
 practice_5()
