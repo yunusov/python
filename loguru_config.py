@@ -41,3 +41,5 @@ def setup_logging():
             serialize=True,  # Структурированное логирование в JSON
         )
         # logger.info("Режим продакшена: логирование настроено для вывода в консоль и файл.")
+
+setup_logging()

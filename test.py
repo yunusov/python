@@ -1,8 +1,6 @@
-from loguru_config import setup_logging, logger
+from loguru_config import logger
 from string import ascii_letters as alpha
 import itertools
-
-setup_logging()
 
 def caesar_cipher(data: str, key: int) -> str:
     result = []
