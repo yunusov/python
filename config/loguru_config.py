@@ -42,4 +42,5 @@ def setup_logging():
         )
         # logger.info("Режим продакшена: логирование настроено для вывода в консоль и файл.")
 
-setup_logging()
+if __name__ != "__main__":
+    setup_logging()
