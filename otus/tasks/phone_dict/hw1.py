@@ -7,9 +7,6 @@ import sys
 
 
 CURRENT_DIR = Path(__file__).parent
-json_file = CURRENT_DIR / "phone_dict.json"
-json_data = dict()
-is_json_data_changed = False
 
 
 class Contact:
@@ -44,24 +41,95 @@ class Contact:
 
     def get_comment(self):
         return self.comment
+    
+
+CONTACT_FIELDS = list(get_type_hints(Contact))
 
 
-USER_FIELDS = list(get_type_hints(Contact))
+class PhoneDict:
+    json_file: Path
+    json_data: dict
+    is_json_data_changed: bool
+
+    def __init__(self, json_file: Path):
+        self.json_file = json_file
+        self.json_data = {"contacts": []}
+        self.is_json_data_changed = False
+        self.load_file(json_file)
+
+    def load_file(self, json_file: Path):
+        """Чтение файла с диска. При необходимости создание и инициализация.
+        
+        Аргументы:
+        pd: экземпляр телефонного справочника.
+        """
+        if not json_file.exists():
+            with json_file.open("w", encoding="utf-8") as f:
+                json.dump(
+                    self.get_json_data(),
+                    f,
+                    ensure_ascii=False,
+                    indent=4,
+                    sort_keys=True,
+                )
+        with json_file.open(encoding="utf-8") as f:
+             self.json_data = json.load(f)
+        self.set_json_file(json_file)
+        self.set_is_json_data_changed(False)
+
+    def save_file(self, filename: str = ""):
+        """Сохранение файла с данными контактов"""
+        json_file = self.get_json_file()
+        if filename != json_file.name and filename:
+            json_file = CURRENT_DIR / (filename + ".json")
+        with json_file.open("w", encoding="utf-8") as f:
+            json.dump(
+                self.get_json_data(),
+                f,
+                ensure_ascii=False,
+                indent=4,
+                sort_keys=True,
+            )
+        self.set_json_file(json_file)
+        self.set_is_json_data_changed(False)
+
+    def get_json_file(self) -> Path:
+        return self.json_file
+    
+    def get_json_data(self) -> dict:
+        return self.json_data
+
+    def get_contacts_list(self) -> list:
+        return self.json_data["contacts"]
+
+    def is_data_changed(self) -> bool:
+        return self.is_json_data_changed
+
+    def set_json_file(self, json_file: Path):
+        self.json_file = json_file
+
+    def set_json_data(self, json_data: dict):
+        self.json_data["contacts"] = json_data
+        self.set_is_json_data_changed(True)
+
+    def append_contact(self, contact: Contact):
+        self.json_data["contacts"].append(contact.to_dict())
+        self.set_is_json_data_changed(True)
+
+    def set_is_json_data_changed(self, is_json_data_changed: bool):
+        self.is_json_data_changed = is_json_data_changed
 
 
 def clear_console():
+    """Очистка консоли для отрисовки нового интерфейса"""
     if os.name == "nt":  # Windows
         _ = os.system("cls")
     else:  # Unix-like systems (Linux/MacOS)
         _ = os.system("clear")
 
 
-def wrong_input():
-    input("Ваша команда не распознана. Нажмите <Enter> и повторите ввод")
-
-
-def open_file():
-    global json_file
+def open_file(pd: PhoneDict):
+    """Меню открытия файла"""
     dict_files = {}
     i = 1
     for file in CURRENT_DIR.iterdir():
@@ -76,61 +144,48 @@ def open_file():
 
     if ("0" != cmd) and dict_files.__contains__(cmd):
         filename = dict_files.get(cmd)
-        json_file = CURRENT_DIR / filename
-        load_file()
+        pd.load_file(CURRENT_DIR / filename)
         input(f"Файл {filename} открыт для работы. Нажмите <Enter>")
 
 
-def save_json_data(filename: str):
-    global json_file
-    if filename != json_file.name and filename:
-        json_file = CURRENT_DIR / (filename + ".json")
-    with json_file.open("w", encoding="utf-8") as f:
-        json.dump(
-            json_data,
-            f,
-            ensure_ascii=False,
-            indent=4,
-            sort_keys=True,
-        )
-
-
-def save_file():
-    global is_json_data_changed
+def save_file(pd: PhoneDict):
+    """Отображение меню сохранение файла с данными контактов"""
     cmd = input(
         "Введите имя сохраняемого файла без расширения.\n"
         "Сохранить под тем же именем - <Enter>.\nВыход в главное меню - <0>: "
     )
     if cmd != "0":
-        save_json_data(cmd)
-        is_json_data_changed = False
+        pd.save_file(cmd)
 
 
 def print_contact_table(contact_list: list):
+    """Вывод таблицы с контактами"""
     print("------------------------------------------------------------")
     print(
-        f"|{str.upper(USER_FIELDS[0])}\t|{str.upper(USER_FIELDS[1])}\t"
-        f"|{str.upper(USER_FIELDS[2])}\t|{str.upper(USER_FIELDS[3])}"
+        f"|{str.upper(CONTACT_FIELDS[0])}\t|{str.upper(CONTACT_FIELDS[1])}\t"
+        f"|{str.upper(CONTACT_FIELDS[2])}\t|{str.upper(CONTACT_FIELDS[3])}"
     )
     print("------------------------------------------------------------")
     for value in contact_list:
-        user = Contact(**value)
+        contact = Contact(**value)
         print(
-            f"|{user.get_id()}\t|{user.get_name()}\t|{user.get_phone()}\t|"
-            f"{user.get_comment()}"
+            f"|{contact.get_id()}\t|{contact.get_name()}\t|{contact.get_phone()}\t|"
+            f"{contact.get_comment()}"
         )
     print("------------------------------------------------------------")
 
 
-def show_all_contacts():
-    print_contact_table(json_data["users"])
-    input(f"\nВсе контакты из файла {json_file}")
+def show_all_contacts(pd: PhoneDict):
+    """Меню отображения всех контактов в файле"""
+    print_contact_table(pd.get_contacts_list())
+    input(f"\nВсе контакты из файла {pd.get_json_file()}")
 
 
-def create_contact():
-    global json_data, is_json_data_changed
+def create_contact(pd: PhoneDict):
+    """Меню создания контакта"""
     print("Создание контакта\n")
     not_correct_id_flag = True
+    id = ""
     while not_correct_id_flag:
         id = input("Введите ID: ")
         if not id:
@@ -141,146 +196,150 @@ def create_contact():
     phone = input("Введите номер телефона: ")
     comment = input("Введите комментарий: ")
     contact = Contact(id, name, phone, comment)
-    json_data["users"].append(contact.to_dict())
-    is_json_data_changed = True
+    pd.append_contact(contact)
     input(f"Контакт {contact.to_dict()} создан!")
 
 
-def find_contact():
+def find_contact(pd: PhoneDict):
+    """Меню поиска контакта"""
     matched_contacts = list()
     cmd = input("Введите значение для поиска по полям: ")
     if cmd:
-        for user in json_data["users"]:
+        for contact in pd.get_contacts_list():
             if (
-                user.get("id") == cmd
-                or cmd in user.get("name")
-                or cmd in user.get("phone")
-                or cmd in user.get("comment")
+                contact.get("id") == cmd
+                or cmd in contact.get("name")
+                or cmd in contact.get("phone")
+                or cmd in contact.get("comment")
             ):
-                matched_contacts.append(user)
+                matched_contacts.append(contact)
     print_contact_table(matched_contacts)
     input(f"\n\nПо вашему запросу найдено {len(matched_contacts)} стр.")
 
 
-def change_contact():
-    global is_json_data_changed
-    print_contact_table(json_data["users"])
+def change_contact(pd: PhoneDict):
+    """Редактирование контакта    
+
+    Аргументы:
+    pd: экземпляр телефонного справочника."""
+    json_data = pd.get_contacts_list()
+    print_contact_table(json_data)
     cmd = input("\nВведите ID изменяемого контакта: ")
     if cmd:
-        users = json_data["users"]
-        fixed_user = ""
-        for user in users:
-            if user.get("id") == cmd:
-                users.remove(user)
-                fixed_user = user
+        fixed_contact = ""
+        for contact in json_data:
+            if contact.get("id") == cmd:
+                json_data.remove(contact)
+                fixed_contact = contact
                 name = input("Введите имя: ")
                 phone = input("Введите номер телефона: ")
                 comment = input("Введите комментарий: ")
                 contact = Contact(
                     cmd,
-                    name if name else user.get("name"),
-                    phone if phone else user.get("phone"),
-                    comment if comment else user.get("comment"),
+                    name if name else contact.get("name"),
+                    phone if phone else contact.get("phone"),
+                    comment if comment else contact.get("comment"),
                 )
-                json_data["users"].append(contact.to_dict())
+                json_data.append(contact.to_dict())
                 break
 
-        if fixed_user:
-            json_data["users"] = users
-            input(f"\n Контакт {fixed_user} был обновлён!")
-            is_json_data_changed = True
+        if fixed_contact:
+            pd.set_json_data(json_data)
+            input(f"\nКонтакт {fixed_contact} был обновлён!")
 
 
-def delete_contact():
-    global is_json_data_changed
-    print_contact_table()
+def delete_contact(pd: PhoneDict):
+    """Запрос и удаление выбранного контакта
+    
+    Аргументы:
+    pd: экземпляр телефонного справочника."""
+    print_contact_table(pd.get_contacts_list())
     cmd = input("\nВведите ID удаляемого контакта: ")
     if cmd:
-        users = json_data["users"]
-        removed_user = ""
-        for user in users:
-            if user.get("id") == cmd:
-                users.remove(user)
-                removed_user = user
+        contacts = pd.get_contacts_list()
+        removed_contact = ""
+        for contact in contacts:
+            if contact.get("id") == cmd:
+                contacts.remove(contact)
+                removed_contact = contact
                 break
-        if removed_user:
-            json_data["users"] = users
-            input(f"\n Контакт {removed_user} был удалён!")
-            is_json_data_changed = True
+        if removed_contact:
+            pd.set_json_data(contacts)
+            input(f"\nКонтакт {removed_contact} был удалён!")
 
 
-def exit_():
-    if is_json_data_changed:
+def exit_(pd: PhoneDict):
+    """Выход из программы. Запрашивает сохранение файла при изменении данных.
+    
+    Аргументы:
+    pd: экземпляр телефонного справочника."""
+    if pd.is_data_changed():
         cmd = input(
             "Данные были изменены! Хотите перед выходом сохранить изменения? "
             "(Y/N, Y - по умолчанию) "
         )
         if cmd.upper() == "Y" or not cmd:
-            save_json_data(json_file.name)
+            pd.save_file()
     print("Вы вышли из программы")
     sys.exit()
 
 
-def show_main_menu() -> str:
-    """Показывает меню и считывает ввод с клавиатуры"""
+def show_main_menu(pd: PhoneDict) -> str:
+    """
+    Вывод главного меню и считывание ввода с клавиатуры.
+    Возвращает выбранную команду.
+
+    Аргументы:
+    pd: кземпляр телефонного справочника.
+    """
     clear_console()
-    print(f"Телефонный справочник {json_file}\n\n")
-    for key, value in menu_method_map.items():
+    print(f"Телефонный справочник {pd.get_json_file()}\n\n")
+    for key, value in MENU_METHOD_MAP.items():
         print(f"{key}. {value[0]}")
 
     cmd = input("\nВведите числовую команду: ")
     return cmd if cmd else "unknown"
 
 
-def exec_method(cmd: str):
-    """Запускает выбранный метод"""
+def exec_method(cmd: str, pd: PhoneDict):
+    """Исполнение выбранного метода.
+
+    Аргументы:
+    cmd: введёная пользователем команда,
+    pd: экземпляр телефонного справочника.
+    """
     clear_console()
-    if menu_method_map.__contains__(cmd):
-        menu_method_map.get(cmd)[1]()
+    if MENU_METHOD_MAP.__contains__(cmd):
+        MENU_METHOD_MAP.get(cmd)[1](pd)
     else:
-        wrong_input()
-
-
-def load_file():
-    global json_data, is_json_data_changed
-    if not json_file.exists():
-        with json_file.open("w", encoding="utf-8") as f:
-            json.dump(
-                {"users": []},
-                f,
-                ensure_ascii=False,
-                indent=4,
-                sort_keys=True,
-            )
-    with json_file.open(encoding="utf-8") as f:
-        json_data = json.load(f)
-    is_json_data_changed = False
+        input("Ваша команда не распознана. Нажмите <Enter> и повторите ввод")
 
 
 def main():
-    load_file()
-    while cmd := show_main_menu():
-        exec_method(cmd)
+    """Точка входа в программу."""
+    pd = PhoneDict(CURRENT_DIR / "phone_dict.json")
+    while cmd := show_main_menu(pd):
+        exec_method(cmd, pd)
 
 
-open_file_tp = ("Открыть файл", open_file)
-save_file_tp = ("Сохранить файл", save_file)
-show_all_contacts_tp = ("Показать все контакты", show_all_contacts)
-create_contact_tp = ("Создать контакт", create_contact)
-find_contact_tp = ("Найти контакт", find_contact)
-change_contact_tp = ("Изменить контакт", change_contact)
-delete_contact_tp = ("Удалить контакт", delete_contact)
-exit_tp = ("Выход из программы", exit_)
+OPEN_FILE_TP = ("Открыть файл", open_file)
+SAVE_FILE_TP = ("Сохранить файл", save_file)
+SHOW_ALL_CONTACTS_TP = ("Показать все контакты", show_all_contacts)
+CREATE_CONTACT_TP = ("Создать контакт", create_contact)
+FIND_CONTACT_TP = ("Найти контакт", find_contact)
+CHANGE_CONTACT_TP = ("Изменить контакт", change_contact)
+DELETE_CONTACT_TP = ("Удалить контакт", delete_contact)
+EXIT_TP = ("Выход из программы", exit_)
 
-menu_method_map = {
-    "1": open_file_tp,
-    "2": save_file_tp,
-    "3": show_all_contacts_tp,
-    "4": create_contact_tp,
-    "5": find_contact_tp,
-    "6": change_contact_tp,
-    "7": delete_contact_tp,
-    "0": exit_tp,
+MENU_METHOD_MAP = {
+    "1": OPEN_FILE_TP,
+    "2": SAVE_FILE_TP,
+    "3": SHOW_ALL_CONTACTS_TP,
+    "4": CREATE_CONTACT_TP,
+    "5": FIND_CONTACT_TP,
+    "6": CHANGE_CONTACT_TP,
+    "7": DELETE_CONTACT_TP,
+    "0": EXIT_TP,
 }
 
 if __name__ == "__main__":

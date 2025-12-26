@@ -1,34 +1,16 @@
 {
-    "users": [
+    "contacts": [
         {
-            "comment": "Всё ОКЕЙ!",
+            "comment": "comment",
             "id": "1",
             "name": "Виталий",
-            "phone": "123"
+            "phone": "11122233"
         },
         {
-            "comment": "123",
-            "id": "3",
-            "name": "Tayna",
-            "phone": "123"
-        },
-        {
-            "comment": "333",
-            "id": "5",
-            "name": "Tolya",
-            "phone": "222"
-        },
-        {
-            "comment": "8",
-            "id": "7",
-            "name": "Алла",
-            "phone": "777"
-        },
-        {
-            "comment": "1211",
+            "comment": "",
             "id": "2",
-            "name": "Oleg",
-            "phone": "888"
+            "name": "Tanya",
+            "phone": "444"
         }
     ]
 }
