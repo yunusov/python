@@ -4,7 +4,7 @@ import os
 import sys
 
 
-class Mvc_view:
+class View:
     pd: Phone_dict
 
     def __init__(self, pd: Phone_dict):

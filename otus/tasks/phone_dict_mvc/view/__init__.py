@@ -1,3 +1,3 @@
-from .mvc_view import Mvc_view
+from .view import View
 
-__all__ = ["Mvc_view"]
+__all__ = ["View"]

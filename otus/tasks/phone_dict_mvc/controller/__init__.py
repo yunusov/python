@@ -1,3 +1,3 @@
-from .mvc_controller import Mvc_controller
+from .controller import Controller
 
-__all__ = ["Mvc_controller"]
+__all__ = ["Controller"]

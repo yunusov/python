@@ -1,13 +1,14 @@
-from .storage import File_storage
+from .storage import Storage
 from .contact import Contact
 from pathlib import Path
 
+
 class Phone_dict:
     json_data: dict
-    storage: File_storage
+    storage: Storage
     is_json_data_changed: bool
 
-    def __init__(self, storage: File_storage):
+    def __init__(self, storage: Storage):
         self.storage = storage
         self.load_data()
         self.set_is_json_data_changed(False)
@@ -17,7 +18,7 @@ class Phone_dict:
 
     def get_filename(self) -> str:
         return self.storage.get_json_file().name
-    
+
     def get_current_dir(self) -> Path:
         return self.storage.get_current_dir()
 

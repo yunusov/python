@@ -1,10 +1,10 @@
-from view import Mvc_view
+from view import View
 
 
-class Mvc_controller:
-    con_view: Mvc_view
+class Controller:
+    con_view: View
 
-    def __init__(self, con_view: Mvc_view):
+    def __init__(self, con_view: View):
         self.con_view = con_view
 
     def run(self):

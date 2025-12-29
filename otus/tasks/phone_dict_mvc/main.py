@@ -1,15 +1,15 @@
 from pathlib import Path
-from controller import Mvc_controller
-from model import Phone_dict, File_storage
-from view import Mvc_view
+from controller import Controller
+from model import Phone_dict, Storage
+from view import View
 
 
 def main():
     """Точка входа в программу."""
-    storage = File_storage(Path(__file__).parent)
+    storage = Storage(Path(__file__).parent)
     phone_dict = Phone_dict(storage)
-    con_view = Mvc_view(phone_dict)
-    controller = Mvc_controller(con_view)
+    con_view = View(phone_dict)
+    controller = Controller(con_view)
     controller.run()
 
 

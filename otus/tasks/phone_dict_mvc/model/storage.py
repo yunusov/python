@@ -3,7 +3,7 @@ from pathlib import Path
 import json
 
 
-class File_storage:
+class Storage:
 
     current_dir: Path
     json_file: Path
