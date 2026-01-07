@@ -1,13 +1,16 @@
-from model import Contact, Phone_dict, CONTACT_FIELDS
+from common import CatchAllMeta
+from model import Contact, PhoneDictionary, CONTACT_FIELDS
+from prettytable import PrettyTable
 
 import os
 import sys
 
 
-class View:
-    pd: Phone_dict
+class View(metaclass=CatchAllMeta):
+    """Класс для взаимодействия пользователя с программой"""
+    pd: PhoneDictionary
 
-    def __init__(self, pd: Phone_dict):
+    def __init__(self, pd: PhoneDictionary):
         self.pd = pd
 
     def clear_console(self):
@@ -21,7 +24,7 @@ class View:
         """Меню открытия файла"""
         dict_files = {}
         i = 1
-        current_dir = self.pd.get_current_dir()
+        current_dir = self.pd.get_current_dir() / self.pd.get_dict_folder()
         for file in current_dir.iterdir():
             if file.is_file() and file.name.lower().endswith(".json"):
                 print(f"{i}. {file.name}")
@@ -35,34 +38,31 @@ class View:
         if ("0" != cmd) and dict_files.__contains__(cmd):
             filename = dict_files.get(cmd)
             self.pd.load_data(filename)
-            input(f"Файл {filename} открыт для работы. Нажмите <Enter>")
+            input(f"\n\nФайл {filename} открыт для работы. Нажмите <Enter> для продолжения")
 
     def save_file(self):
         """Отображение меню сохранение файла с данными контактов"""
         cmd = input(
             "Введите имя сохраняемого файла без расширения.\n"
-            "Сохранить под тем же именем - <Enter>.\nВыход в главное меню - <0>: "
+            "Сохранить под тем же именем - <Enter>.\n"
+            "Выход в главное меню - <0>: "
         )
         if cmd != "0":
             self.pd.save_data(cmd)
 
-    def print_contact_table(self, contact_list: list = []):
+    def print_contact_table(self, contact_list: list = None):
         """Вывод таблицы с контактами"""
-        if not contact_list:
-            contact_list = self.pd.get_contacts_list()
-        print("------------------------------------------------------------")
-        print(
-            f"|{str.upper(CONTACT_FIELDS[0])}\t|{str.upper(CONTACT_FIELDS[1])}\t"
-            f"|{str.upper(CONTACT_FIELDS[2])}\t|{str.upper(CONTACT_FIELDS[3])}"
-        )
-        print("------------------------------------------------------------")
+        contact_list = contact_list if contact_list else self.pd.get_contacts_list()
+        table = PrettyTable((str.upper(CONTACT_FIELDS[0]),
+                             str.upper(CONTACT_FIELDS[1]),
+                             str.upper(CONTACT_FIELDS[2]),
+                             str.upper(CONTACT_FIELDS[3])))
+
         for value in contact_list:
             contact = Contact(**value)
-            print(
-                f"|{contact.get_id()}\t|{contact.get_name()}\t|{contact.get_phone()}\t|"
-                f"{contact.get_comment()}"
-            )
-        print("------------------------------------------------------------")
+            table.add_row(contact.to_list())
+        print(table)
+
 
     def show_all_contacts(self):
         """Меню отображения всех контактов в файле"""

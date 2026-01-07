@@ -1,16 +1,30 @@
+from .config import Config
+
 from pathlib import Path
 
 import json
 
 
 class Storage:
+    """
+    Класс для работы с файлом телефонного справочника
+    """
 
+    dicts_folder: str = "dicts"
+
+    config: Config
     current_dir: Path
     json_file: Path
 
     def __init__(self, current_dir: Path):
+        """
+        Аргументы:
+        current_dir: текущая директория программы
+        """
+        self.config = Config(current_dir)
         self.current_dir = current_dir
-        self.json_file = current_dir / "phone_dict.json"
+        self.dicts_folder = self.config.get_storage_folder()
+        self.json_file = current_dir / self.dicts_folder / self.config.get_storage_name()
 
     def get_current_dir(self) -> Path:
         return self.current_dir
@@ -20,6 +34,7 @@ class Storage:
 
     def set_json_file(self, json_file: Path):
         self.json_file = json_file
+        self.config.set_storage_name(json_file.name)
 
     def read_file(self, filename: str) -> dict:
         """Чтение файла с диска. При необходимости создание и инициализация.
@@ -29,8 +44,9 @@ class Storage:
         """
         json_file = self.get_json_file()
         if filename != json_file.name and filename:
-            json_file = self.get_current_dir() / (filename)
+            json_file = self.get_current_dir() / self.dicts_folder / (filename)
             self.set_json_file(json_file)
+            self.config.write_config()
         result = {}
         if not self.json_file.exists():
             with self.json_file.open("w", encoding="utf-8") as f:
@@ -53,7 +69,7 @@ class Storage:
         """
         json_file = self.get_json_file()
         if filename != json_file.name and filename:
-            json_file = self.get_current_dir() / (filename + ".json")
+            json_file = self.get_current_dir() / self.dicts_folder / (filename + ".json")
             self.set_json_file(json_file)
         with json_file.open("w", encoding="utf-8") as f:
             json.dump(
