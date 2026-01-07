@@ -1,8 +1,15 @@
-# pip install loguru
-
 import sys
 import os
-from loguru import logger
+
+try:
+    from loguru import logger # pip install loguru
+except ModuleNotFoundError as e:
+    try:
+        import subprocess
+        subprocess.check_call([sys.executable, "-m", "pip", "install", e.name])
+        print(f"Библиотека {e.name} успешно установлена!")
+    except Exception as err:
+        raise Exception(f"Произошла ошибка при установке: {err}")
 
 def setup_logging():
     """

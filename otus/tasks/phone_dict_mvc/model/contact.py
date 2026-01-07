@@ -2,6 +2,7 @@ from typing import get_type_hints
 
 
 class Contact:
+    """Класс для представления сущности контакт телефонного справочника"""
     id: str
     name: str
     phone: str
@@ -21,6 +22,15 @@ class Contact:
             "phone": self.phone,
             "comment": self.comment,
         }
+    
+    def to_list(self):
+        """Метод для представления объекта в виде списка"""
+        return [
+            self.id,
+            self.name,
+            self.phone,
+            self.comment,
+        ]
 
     def get_id(self):
         return self.id

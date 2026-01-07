@@ -1,9 +1,10 @@
-from .storage import Storage
 from .contact import Contact
+from .storage import Storage
 from pathlib import Path
 
 
-class Phone_dict:
+class PhoneDictionary:
+    """Класс для представления сущности телефонного справочника"""
     json_data: dict
     storage: Storage
     is_json_data_changed: bool
@@ -11,7 +12,9 @@ class Phone_dict:
     def __init__(self, storage: Storage):
         self.storage = storage
         self.load_data()
-        self.set_is_json_data_changed(False)
+
+    def get_dict_folder(self):
+        return Storage.dicts_folder    
 
     def get_json_data(self) -> dict:
         return self.json_data
@@ -26,9 +29,11 @@ class Phone_dict:
         return self.json_data["contacts"]
 
     def is_data_changed(self) -> bool:
+        """Проверка флага об изменениях данных справочника"""
         return self.is_json_data_changed
 
     def load_data(self, filename: str = ""):
+        """Загрузка данных из файла в структуру класса"""
         json_data = self.storage.read_file(filename)
         if json_data:
             self.json_data = json_data
@@ -37,16 +42,20 @@ class Phone_dict:
         self.set_is_json_data_changed(False)
 
     def save_data(self, filename: str = ""):
+        """Сохранение данных из класса в файл"""
         self.storage.save_file(self.get_json_data(), filename)
         self.set_is_json_data_changed(False)
 
     def set_json_data(self, contact_list: list):
+        """Обновление данных"""
         self.json_data["contacts"] = contact_list
         self.set_is_json_data_changed(True)
 
     def append_contact(self, contact: Contact):
+        """Добавление контакта"""
         self.json_data["contacts"].append(contact.to_dict())
         self.set_is_json_data_changed(True)
 
     def set_is_json_data_changed(self, is_json_data_changed: bool):
+        """Установка флага изменения данных"""
         self.is_json_data_changed = is_json_data_changed
