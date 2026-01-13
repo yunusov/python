@@ -1,4 +1,5 @@
 /.*
 **/__pycache__/*
-**/logs/*
 **/test*
+**/logs/*
+test.py
