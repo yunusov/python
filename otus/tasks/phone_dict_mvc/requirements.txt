@@ -1,0 +1,4 @@
+loguru==0.7.3
+pyyaml==6.0.3
+prettytable==3.17.0
+pytest==9.0.2

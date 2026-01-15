@@ -1,6 +1,6 @@
 app:
   name: Телефонный справочник
-  version: 1.23
+  version: 1.12
 storage:
   folder: dicts
-  name: phone_dict.json
+  name: 2.json
