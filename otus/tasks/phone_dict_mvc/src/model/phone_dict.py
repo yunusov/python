@@ -2,6 +2,8 @@ from .contact import Contact
 from .storage import Storage
 from pathlib import Path
 
+import re
+
 
 class PhoneDictionary:
     """Класс для представления сущности телефонного справочника"""
@@ -59,3 +61,16 @@ class PhoneDictionary:
     def set_is_json_data_changed(self, is_json_data_changed: bool):
         """Установка флага изменения данных"""
         self.is_json_data_changed = is_json_data_changed
+
+    def _is_integer(cls, string) -> bool:
+        if isinstance(string, int):
+            return True
+        pattern = r'^[-+]?\d+$'
+        return bool(re.match(pattern, string))
+
+    def get_next_id(self) -> str:
+        result = 0
+        contacts = self.get_contacts_list()
+        if contacts:
+            result = max([int(x.get("id", "0")) for x in contacts if self._is_integer(x.get("id", "0"))])
+        return str(result + 1)
