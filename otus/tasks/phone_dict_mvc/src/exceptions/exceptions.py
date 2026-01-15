@@ -1,11 +1,14 @@
 class PhoneDictException(Exception):
     """Общее исключение"""
+
     def __init__(self, message="Произошла ошибка"):
         self.message = message
         super().__init__(self.message)
 
+
 class ConfigNotFoundException(Exception):
     """Исключение об отсутствии конфигурационного файла"""
-    def __init__(self, message=f"Файл конфигурации программы config.yaml не найден!"):
-        self.message = message
+
+    def __init__(self, file, message="Файл конфигурации программы {} не найден!"):
+        self.message = message.format(file)
         super().__init__(self.message)

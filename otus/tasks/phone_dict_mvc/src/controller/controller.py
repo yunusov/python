@@ -1,5 +1,5 @@
 from loguru import logger
-from view import View
+from ..view import View
 
 
 class Controller:
@@ -16,7 +16,7 @@ class Controller:
         except KeyboardInterrupt as e:
             print("\n\nПользователь прекратил работу программы.")
         except Exception as e:
-            print(f"\n\nИсключение '{e.message}' прервало работу программы. Обратитесь к разработчику.")
+            print(f"\n\nИсключение '{e}' прервало работу программы. Обратитесь к разработчику.")
             logger.error(e)
         finally:
             exit()

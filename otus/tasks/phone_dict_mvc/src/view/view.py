@@ -1,6 +1,8 @@
-from common import CatchAllMeta
-from model import Contact, PhoneDictionary, CONTACT_FIELDS
+from ..common import CatchAllMeta
+from ..model import Contact, PhoneDictionary, CONTACT_FIELDS
+from .view_api import ViewApi
 from prettytable import PrettyTable
+from loguru import logger
 
 import os
 import sys
@@ -8,10 +10,12 @@ import sys
 
 class View(metaclass=CatchAllMeta):
     """Класс для взаимодействия пользователя с программой"""
+
     pd: PhoneDictionary
 
     def __init__(self, pd: PhoneDictionary):
         self.pd = pd
+        self.view_api = ViewApi(self.pd.get_current_dir() / self.pd.get_dict_folder())
 
     def clear_console(self):
         """Очистка консоли для отрисовки нового интерфейса"""
@@ -22,47 +26,52 @@ class View(metaclass=CatchAllMeta):
 
     def open_file(self):
         """Меню открытия файла"""
-        dict_files = {}
-        i = 1
-        current_dir = self.pd.get_current_dir() / self.pd.get_dict_folder()
-        for file in current_dir.iterdir():
-            if file.is_file() and file.name.lower().endswith(".json"):
-                print(f"{i}. {file.name}")
-                dict_files[str(i)] = file.name
-                i += 1
+        logger.info("open_file")
+        dict_files = self.view_api.get_phone_dict_files()
+        for key, file in dict_files.items():
+            print(f"{key}. {file}")
         print("0 - выход в главное меню")
         cmd = input(
             "\nВыберите позицию файла в текущей директории который желаете открыть: "
         )
 
-        if ("0" != cmd) and dict_files.__contains__(cmd):
+        logger.info(f"{cmd = }")
+        if ("0" != cmd) and dict_files.get(cmd, None):
             filename = dict_files.get(cmd)
+            logger.info(f"{filename = }")
             self.pd.load_data(filename)
-            input(f"\n\nФайл {filename} открыт для работы. Нажмите <Enter> для продолжения")
+            input(
+                f"\n\nФайл {filename} открыт для работы. Нажмите <Enter> для продолжения"
+            )
 
     def save_file(self):
         """Отображение меню сохранение файла с данными контактов"""
+        logger.info("save_file")
         cmd = input(
             "Введите имя сохраняемого файла без расширения.\n"
             "Сохранить под тем же именем - <Enter>.\n"
             "Выход в главное меню - <0>: "
         )
+        logger.info(f"{cmd = }")
         if cmd != "0":
             self.pd.save_data(cmd)
 
     def print_contact_table(self, contact_list: list = None):
         """Вывод таблицы с контактами"""
         contact_list = contact_list if contact_list else self.pd.get_contacts_list()
-        table = PrettyTable((str.upper(CONTACT_FIELDS[0]),
-                             str.upper(CONTACT_FIELDS[1]),
-                             str.upper(CONTACT_FIELDS[2]),
-                             str.upper(CONTACT_FIELDS[3])))
+        table = PrettyTable(
+            (
+                str.upper(CONTACT_FIELDS[0]),
+                str.upper(CONTACT_FIELDS[1]),
+                str.upper(CONTACT_FIELDS[2]),
+                str.upper(CONTACT_FIELDS[3]),
+            )
+        )
 
         for value in contact_list:
             contact = Contact(**value)
             table.add_row(contact.to_list())
         print(table)
-
 
     def show_all_contacts(self):
         """Меню отображения всех контактов в файле"""
@@ -71,26 +80,23 @@ class View(metaclass=CatchAllMeta):
 
     def create_contact(self):
         """Меню создания контакта"""
+        logger.info("create_contact")
         print("Создание контакта\n")
-        not_correct_id_flag = True
-        id = ""
-        while not_correct_id_flag:
-            id = input("Введите ID: ")
-            if not id:
-                print("Поле ID должно быть обязательно заполнено!")
-                continue
-            not_correct_id_flag = False
+        id = self.pd.get_next_id()
         name = input("Введите имя: ")
         phone = input("Введите номер телефона: ")
         comment = input("Введите комментарий: ")
         contact = Contact(id, name, phone, comment)
         self.pd.append_contact(contact)
+        logger.info(f"Контакт {contact.to_dict()} создан!")
         input(f"Контакт {contact.to_dict()} создан!")
 
     def find_contact(self):
         """Меню поиска контакта"""
+        logger.info("find_contact")
         matched_contacts = list()
         cmd = input("Введите значение для поиска по полям: ")
+        logger.info(f"{cmd = }")
         if cmd:
             for contact in self.pd.get_contacts_list():
                 if (
@@ -101,13 +107,16 @@ class View(metaclass=CatchAllMeta):
                 ):
                     matched_contacts.append(contact)
         self.print_contact_table(matched_contacts)
+        logger.info(f"{matched_contacts = }")
         input(f"\n\nПо вашему запросу найдено {len(matched_contacts)} стр.")
 
-    def change_contact(self):
+    def modify_contact(self):
         """Редактирование контакта"""
+        logger.info("change_contact")
         contacts_list = self.pd.get_contacts_list()
         self.print_contact_table()
         cmd = input("\nВведите ID изменяемого контакта: ")
+        logger.info(f"{cmd = }")
         if cmd:
             fixed_contact = ""
             for contact in contacts_list:
@@ -124,27 +133,25 @@ class View(metaclass=CatchAllMeta):
                         comment if comment else contact.get("comment"),
                     )
                     contacts_list.append(contact.to_dict())
+                    self.pd.set_json_data(contacts_list)
+                    logger.info(f"{fixed_contact = } {contact.to_dict() = }")
+                    input(f"\nКонтакт {contact.to_dict()} был обновлён!")
                     break
-
-            if fixed_contact:
-                self.pd.set_json_data(contacts_list)
-                input(f"\nКонтакт {fixed_contact} был обновлён!")
 
     def delete_contact(self):
         """Запрос и удаление выбранного контакта"""
         self.print_contact_table()
         cmd = input("\nВведите ID удаляемого контакта: ")
+        logger.info(f"{cmd = }")
         if cmd:
             contacts_list = self.pd.get_contacts_list()
-            removed_contact = ""
             for contact in contacts_list:
                 if contact.get("id") == cmd:
                     contacts_list.remove(contact)
-                    removed_contact = contact
+                    self.pd.set_json_data(contacts_list)
+                    logger.info(f"\nКонтакт {contact} был удалён!")
+                    input(f"\nКонтакт {contact} был удалён!")
                     break
-            if removed_contact:
-                self.pd.set_json_data(contacts_list)
-                input(f"\nКонтакт {removed_contact} был удалён!")
 
     def exit_(self):
         """Выход из программы. Запрашивает сохранение файла при изменении данных."""
@@ -163,7 +170,7 @@ class View(metaclass=CatchAllMeta):
     SHOW_ALL_CONTACTS_TP = ("Показать все контакты", show_all_contacts)
     CREATE_CONTACT_TP = ("Создать контакт", create_contact)
     FIND_CONTACT_TP = ("Найти контакт", find_contact)
-    CHANGE_CONTACT_TP = ("Изменить контакт", change_contact)
+    MODIFY_CONTACT_TP = ("Изменить контакт", modify_contact)
     DELETE_CONTACT_TP = ("Удалить контакт", delete_contact)
     EXIT_TP = ("Выход из программы", exit_)
 
@@ -173,7 +180,7 @@ class View(metaclass=CatchAllMeta):
         "3": SHOW_ALL_CONTACTS_TP,
         "4": CREATE_CONTACT_TP,
         "5": FIND_CONTACT_TP,
-        "6": CHANGE_CONTACT_TP,
+        "6": MODIFY_CONTACT_TP,
         "7": DELETE_CONTACT_TP,
         "0": EXIT_TP,
     }
