@@ -1,6 +1,6 @@
-from ..exceptions import ContactException
-from ..common import CatchAllMeta
-from ..model import Contact, PhoneDictionary, CONTACT_FIELDS
+from src.exceptions import ContactError
+from src.common import CatchAllMeta
+from src.model import Contact, PhoneDictionary, CONTACT_FIELDS
 from .view_api import ViewApi
 from prettytable import PrettyTable
 from loguru import logger
@@ -37,7 +37,7 @@ class View(metaclass=CatchAllMeta):
         )
 
         logger.info(f"{cmd = }")
-        if ("0" != cmd) and dict_files.get(cmd, None):
+        if ("0" != cmd) and dict_files.__contains__(cmd):
             filename = dict_files.get(cmd)
             logger.info(f"{filename = }")
             self.pd.load_data(filename)
@@ -92,10 +92,9 @@ class View(metaclass=CatchAllMeta):
             self.pd.append_contact(contact)
             logger.info(f"Контакт {contact.to_dict()} создан!")
             input(f"\n\nКонтакт {contact.to_dict()} создан!")
-        except ContactException as e:
+        except ContactError as e:
             logger.error(e)
             input(f"\n\nКонтакт не создан по причине: '{e}'!")
-
 
     def find_contact(self):
         """Меню поиска контакта"""
@@ -143,9 +142,9 @@ class View(metaclass=CatchAllMeta):
                         self.pd.set_json_data(contacts_list)
                         logger.info(f"{fixed_contact = } {contact.to_dict() = }")
                         input(f"\nКонтакт {contact.to_dict()} был обновлён!")
-                    except ContactException as e:
+                    except ContactError as e:
                         logger.error(e)
-                        input(f"\n\nКонтакт не изменён по причине: '{e}'!")    
+                        input(f"\n\nКонтакт не изменён по причине: '{e}'!")
                     break
 
     def delete_contact(self):

@@ -1,9 +1,10 @@
 from typing import get_type_hints
-from ..exceptions import ContactException
+from ..exceptions import ContactError
 
 
 class Contact:
     """Класс для представления сущности контакт телефонного справочника"""
+
     id: str
     name: str
     phone: str
@@ -11,9 +12,9 @@ class Contact:
 
     def _validate(self):
         if not self.id:
-            raise ContactException("Поле контакта ID не должно быть пустое")
+            raise ContactError("Поле контакта ID не должно быть пустое")
         if not self.name:
-            raise ContactException("Имя контакта не должно быть пустое")
+            raise ContactError("Имя контакта не должно быть пустое")
 
     def __init__(self, id: str, name: str, phone: str, comment: str):
         self.id = id
@@ -30,7 +31,7 @@ class Contact:
             "phone": self.phone,
             "comment": self.comment,
         }
-    
+
     def to_list(self):
         """Метод для представления объекта в виде списка"""
         return [
@@ -51,6 +52,6 @@ class Contact:
 
     def get_comment(self):
         return self.comment
-    
+
 
 CONTACT_FIELDS = list(get_type_hints(Contact))

@@ -1,5 +1,5 @@
-from ..common import CatchAllMeta
-from ..exceptions import ConfigNotFoundException, PhoneDictException
+from src.common import CatchAllMeta
+from src.exceptions import ConfigError
 from loguru import logger
 from pathlib import Path
 
@@ -17,10 +17,10 @@ class Config(metaclass=CatchAllMeta):
     def __init__(self, current_dir: Path):
         self.current_dir = current_dir
         self.read_config()
-    
-    @staticmethod
-    def get_config_name() -> str:
-        return Config.CONFIG_NAME
+
+    @classmethod
+    def get_config_name(cls) -> str:
+        return cls.CONFIG_NAME
 
     def get_storage_name(self) -> str:
         """Получение имени файла данных телефонного справочника"""
@@ -28,7 +28,7 @@ class Config(metaclass=CatchAllMeta):
             return self.config_file["storage"]["name"]
         except KeyError as e:
             logger.error(e)
-            raise PhoneDictException(
+            raise ConfigError(
                 "Конфигурационный файл повреждён. Обратитесь к разработчику."
             )
 
@@ -38,7 +38,7 @@ class Config(metaclass=CatchAllMeta):
             return self.config_file["storage"]["folder"]
         except KeyError as e:
             logger.error(e)
-            raise PhoneDictException(
+            raise ConfigError(
                 "Конфигурационный файл повреждён. Обратитесь к разработчику."
             )
 
@@ -54,7 +54,7 @@ class Config(metaclass=CatchAllMeta):
                 self.config_file = yaml.safe_load(f)
         except FileNotFoundError as e:
             logger.error(e)
-            raise ConfigNotFoundException(file=e.filename)
+            raise ConfigError(file=e.filename)
 
     def write_config(self):
         """Запись в конфигурационный файл"""

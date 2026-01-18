@@ -1,5 +1,4 @@
 from ..common.catch_all_meta import CatchAllMeta
-from ..exceptions import PhoneDictException
 from .config import Config
 
 from loguru import logger
@@ -23,6 +22,7 @@ class Storage(metaclass=CatchAllMeta):
         """
         Аргументы:
         current_dir: текущая директория программы
+        config: конфигурая с настройками приложения
         """
         if config:
             self.config = config
@@ -30,7 +30,9 @@ class Storage(metaclass=CatchAllMeta):
             self.config = Config(current_dir)
         self.current_dir = current_dir
         self.dicts_folder = self.config.get_storage_folder()
-        self.json_file = current_dir / self.dicts_folder / self.config.get_storage_name()
+        self.json_file = (
+            current_dir / self.dicts_folder / self.config.get_storage_name()
+        )
 
     def get_current_dir(self) -> Path:
         return self.current_dir
@@ -68,16 +70,18 @@ class Storage(metaclass=CatchAllMeta):
         """
         json_file = self.get_json_file()
         if filename != json_file.name and filename:
-            json_file = self.get_current_dir() / self.dicts_folder / (filename + ".json")
+            json_file = (
+                self.get_current_dir() / self.dicts_folder / (filename + ".json")
+            )
             self.set_json_file(json_file)
         self.write_file(json_data)
 
     def write_file(self, data):
         with self.json_file.open("w", encoding="utf-8") as f:
             json.dump(
-                        data,
-                        f,
-                        ensure_ascii=False,
-                        indent=4,
-                        sort_keys=True,
-                    )
+                data,
+                f,
+                ensure_ascii=False,
+                indent=4,
+                sort_keys=True,
+            )

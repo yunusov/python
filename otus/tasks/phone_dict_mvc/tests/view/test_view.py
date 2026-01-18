@@ -14,7 +14,7 @@ CURRENT_DIR = Path(__file__).parent.parent
 RESOURCE_DIR = CURRENT_DIR / "resources"
 DICTS_DIR = RESOURCE_DIR / "dicts"
 logger = AppLogger(CURRENT_DIR).get_logger()
-all_chars = string.ascii_letters + string.digits
+ALL_CHARS = string.ascii_letters + string.digits
 
 from src.view import View
 
@@ -27,7 +27,7 @@ def view():
 @pytest.fixture
 def rand_string() -> str:
     """Генерирует случайный строку из букв и цифр."""
-    result = random.choices(all_chars, k=8)
+    result = random.choices(ALL_CHARS, k=8)
     return "".join(result)
 
 
@@ -39,6 +39,7 @@ def rand_phone() -> str:
 
 
 def get_last_output(capsys):
+    """Выдаёт последнее сообщение из метода"""
     captured = capsys.readouterr()
     output = captured.out.split("\n")
     result = output[-1]
@@ -87,6 +88,7 @@ def test_create_contact(view, rand_string, rand_phone, monkeypatch, capsys):
                                      ("Юзер", "", ""),
                                      ("使用者", "XXII-0V-XVI", "非常に長い日本語解説"*5)])
 def test_create_contact_params(view, contact, monkeypatch, capsys):
+    """Тестируем параметризованное создание пользователя"""
     monkeypatch.setattr(
         "sys.stdin",
         io.StringIO("\n".join([contact[0], contact[1], contact[2], "\r"])),

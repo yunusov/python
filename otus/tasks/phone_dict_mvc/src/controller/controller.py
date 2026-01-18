@@ -1,5 +1,5 @@
 from loguru import logger
-from ..view import View
+from src.view import View
 
 
 class Controller:
