@@ -26,14 +26,14 @@ def view():
 
 @pytest.fixture
 def rand_string() -> str:
-    """Генерирует случайный строку заданной длины."""
+    """Генерирует случайный строку из букв и цифр."""
     result = random.choices(all_chars, k=8)
     return "".join(result)
 
 
 @pytest.fixture
 def rand_phone() -> str:
-    """Генерирует случайный строку заданной длины."""
+    """Генерирует случайный строку из цифр."""
     result = random.choices(string.digits, k=8)
     return "".join(result)
 
@@ -41,7 +41,9 @@ def rand_phone() -> str:
 def get_last_output(capsys):
     captured = capsys.readouterr()
     output = captured.out.split("\n")
-    return output[-1]
+    result = output[-1]
+    logger.info(f"output = {result}")
+    return result
 
 
 def test_open_file(view, monkeypatch, capsys):
@@ -76,28 +78,67 @@ def test_create_contact(view, rand_string, rand_phone, monkeypatch, capsys):
     view.create_contact()
     output = get_last_output(capsys)
 
-    logger.info(f"{output = }")
-    assert all(sub in output for sub in ["Контакт", "создан!", rand_string, rand_phone])
+    assert all(sub in output for sub in ["Контакт", "создан!", rand_string,
+                                         rand_phone])
+    
+
+@pytest.mark.parametrize("contact", [("USER", "123", "comment"),
+                                     ("U3#r", "ABC123", "   cOmmEnT  ! "),
+                                     ("Юзер", "", ""),
+                                     ("使用者", "XXII-0V-XVI", "非常に長い日本語解説"*5)])
+def test_create_contact_params(view, contact, monkeypatch, capsys):
+    monkeypatch.setattr(
+        "sys.stdin",
+        io.StringIO("\n".join([contact[0], contact[1], contact[2], "\r"])),
+    )
+    view.create_contact()
+    output = get_last_output(capsys)
+
+    assert all(sub in output for sub in ["Контакт", "создан!", contact[0],
+                                         contact[1], contact[2]])
+
+
+def test_create_empty_name_contact(view, monkeypatch, capsys):
+    """Тестируем создание 'пустого' контакта"""
+    monkeypatch.setattr(
+        "sys.stdin",
+        io.StringIO("\n".join(["", "", "", "\r", "name", "", "", "\r"])),
+    )
+    view.create_contact()
+    output = get_last_output(capsys)
+
+    assert output == "Контакт не создан по причине: 'Имя контакта не должно быть пустое'!"
+
+    with patch("src.model.PhoneDictionary.get_next_id", return_value=None):
+        view.create_contact()
+    output = get_last_output(capsys)
+
+    assert output == "Контакт не создан по причине: 'Поле контакта ID не должно быть пустое'!"
 
 
 def test_find_contact(view, rand_string, rand_phone, monkeypatch, capsys):
-    """Тестируем поиск пользователя"""
+    """Тестируем поиск контакта"""
     monkeypatch.setattr(
         "sys.stdin",
         io.StringIO(
-            "\n".join([rand_string, rand_phone, rand_string, "\r", rand_string, "\r"])
+            "\n".join([rand_string, rand_phone, rand_string, "\r", rand_string,
+                       "\r", rand_string + "rand", "\r"])
         ),
     )
     view.create_contact()
     view.find_contact()
     output = get_last_output(capsys)
-    logger.info(f"{output = }")
 
     assert output == "По вашему запросу найдено 1 стр."
 
+    view.find_contact()
+    output = get_last_output(capsys)
 
-def test_find_contact(view, rand_string, rand_phone, monkeypatch, capsys):
-    """Тестируем поиск пользователя"""
+    assert output == "По вашему запросу найдено 0 стр."
+
+
+def test_modify_contact(view, rand_string, rand_phone, monkeypatch, capsys):
+    """Тестируем изменение контакта"""
     user_id = "".join([rand_string, rand_phone])
     modify_name = rand_string + "name"
     modify_phone = rand_phone + "phone"
@@ -106,7 +147,8 @@ def test_find_contact(view, rand_string, rand_phone, monkeypatch, capsys):
         "sys.stdin",
         io.StringIO(
             "\n".join([rand_string, rand_phone, rand_string, "\r", user_id, 
-                       modify_name, modify_phone, modify_comment , "\r"])
+                       modify_name, modify_phone, modify_comment , "\r",
+                       user_id, "", modify_phone, modify_comment , "\r"])
         ),
     )
     with patch("src.model.PhoneDictionary.get_next_id", return_value=user_id):
@@ -114,10 +156,14 @@ def test_find_contact(view, rand_string, rand_phone, monkeypatch, capsys):
         
     view.modify_contact()
     output = get_last_output(capsys)
-    logger.info(f"{output = }")
 
     assert all(sub in output for sub in ["Контакт", "был обновлён!", modify_name,
                                          modify_phone, modify_comment])
+    
+    view.modify_contact()
+    output = get_last_output(capsys)
+
+    assert output == "Контакт не изменён по причине: 'Имя контакта не должно быть пустое'!"
 
 
 def test_delete_contact(view, rand_string, rand_phone, monkeypatch, capsys):
@@ -126,7 +172,8 @@ def test_delete_contact(view, rand_string, rand_phone, monkeypatch, capsys):
     monkeypatch.setattr(
         "sys.stdin",
         io.StringIO(
-            "\n".join([rand_string, rand_phone, rand_string, "\r", user_id, "\r"])
+            "\n".join([rand_string, rand_phone, rand_string, "\r", user_id, "\r",
+                       user_id, "\r"])
         ),
     )
     with patch("src.model.PhoneDictionary.get_next_id", return_value=user_id):
@@ -134,7 +181,11 @@ def test_delete_contact(view, rand_string, rand_phone, monkeypatch, capsys):
         
     view.delete_contact()
     output = get_last_output(capsys)
-    logger.info(f"{output = }")
 
     assert all(sub in output for sub in ["Контакт", "был удалён!", rand_string,
                                          rand_phone, user_id])
+    
+    view.delete_contact()
+    output = get_last_output(capsys)
+
+    assert output == "Контакт ID = {0} не обнаружен!".format(user_id)

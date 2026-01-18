@@ -1,4 +1,5 @@
 from typing import get_type_hints
+from ..exceptions import ContactException
 
 
 class Contact:
@@ -8,11 +9,18 @@ class Contact:
     phone: str
     comment: str
 
+    def _validate(self):
+        if not self.id:
+            raise ContactException("Поле контакта ID не должно быть пустое")
+        if not self.name:
+            raise ContactException("Имя контакта не должно быть пустое")
+
     def __init__(self, id: str, name: str, phone: str, comment: str):
         self.id = id
         self.name = name
         self.phone = phone
         self.comment = comment
+        self._validate()
 
     def to_dict(self):
         """Метод для представления объекта в виде словаря"""

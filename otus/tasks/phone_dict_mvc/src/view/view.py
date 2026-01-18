@@ -1,3 +1,4 @@
+from ..exceptions import ContactException
 from ..common import CatchAllMeta
 from ..model import Contact, PhoneDictionary, CONTACT_FIELDS
 from .view_api import ViewApi
@@ -76,7 +77,7 @@ class View(metaclass=CatchAllMeta):
     def show_all_contacts(self):
         """Меню отображения всех контактов в файле"""
         self.print_contact_table()
-        input(f"\nВсе контакты из файла {self.pd.get_filename()}")
+        input(f"\n\nВсе контакты из файла {self.pd.get_filename()}")
 
     def create_contact(self):
         """Меню создания контакта"""
@@ -86,10 +87,15 @@ class View(metaclass=CatchAllMeta):
         name = input("Введите имя: ")
         phone = input("Введите номер телефона: ")
         comment = input("Введите комментарий: ")
-        contact = Contact(id, name, phone, comment)
-        self.pd.append_contact(contact)
-        logger.info(f"Контакт {contact.to_dict()} создан!")
-        input(f"Контакт {contact.to_dict()} создан!")
+        try:
+            contact = Contact(id, name, phone, comment)
+            self.pd.append_contact(contact)
+            logger.info(f"Контакт {contact.to_dict()} создан!")
+            input(f"\n\nКонтакт {contact.to_dict()} создан!")
+        except ContactException as e:
+            logger.error(e)
+            input(f"\n\nКонтакт не создан по причине: '{e}'!")
+
 
     def find_contact(self):
         """Меню поиска контакта"""
@@ -126,16 +132,20 @@ class View(metaclass=CatchAllMeta):
                     name = input("Введите имя: ")
                     phone = input("Введите номер телефона: ")
                     comment = input("Введите комментарий: ")
-                    contact = Contact(
-                        cmd,
-                        name if name else contact.get("name"),
-                        phone if phone else contact.get("phone"),
-                        comment if comment else contact.get("comment"),
-                    )
-                    contacts_list.append(contact.to_dict())
-                    self.pd.set_json_data(contacts_list)
-                    logger.info(f"{fixed_contact = } {contact.to_dict() = }")
-                    input(f"\nКонтакт {contact.to_dict()} был обновлён!")
+                    try:
+                        contact = Contact(
+                            cmd,
+                            name,
+                            phone if phone else contact.get("phone"),
+                            comment if comment else contact.get("comment"),
+                        )
+                        contacts_list.append(contact.to_dict())
+                        self.pd.set_json_data(contacts_list)
+                        logger.info(f"{fixed_contact = } {contact.to_dict() = }")
+                        input(f"\nКонтакт {contact.to_dict()} был обновлён!")
+                    except ContactException as e:
+                        logger.error(e)
+                        input(f"\n\nКонтакт не изменён по причине: '{e}'!")    
                     break
 
     def delete_contact(self):
@@ -151,13 +161,14 @@ class View(metaclass=CatchAllMeta):
                     self.pd.set_json_data(contacts_list)
                     logger.info(f"\nКонтакт {contact} был удалён!")
                     input(f"\nКонтакт {contact} был удалён!")
-                    break
+                    return
+        input(f"\n\nКонтакт ID = {cmd} не обнаружен!")
 
     def exit_(self):
         """Выход из программы. Запрашивает сохранение файла при изменении данных."""
         if self.pd.is_data_changed():
             cmd = input(
-                "Данные были изменены! Хотите перед выходом сохранить изменения? "
+                "\n\nДанные были изменены! Хотите перед выходом сохранить изменения? "
                 "(Y/N, Y - по умолчанию) "
             )
             if cmd.upper() == "Y" or not cmd:
