@@ -1,5 +1,6 @@
 /.*
+**/.coverage
 **/__pycache__/*
-**/test*
+**/test*.json
 **/logs/*
 test.py
