@@ -1,0 +1,22 @@
+{
+    "contacts": [
+        {
+            "comment": "comment",
+            "id": "1",
+            "name": "Виталий",
+            "phone": "11122233"
+        },
+        {
+            "comment": "",
+            "id": "2",
+            "name": "Tanya",
+            "phone": "444"
+        },
+        {
+            "comment": "",
+            "id": "5",
+            "name": "55",
+            "phone": "55"
+        }
+    ]
+}
