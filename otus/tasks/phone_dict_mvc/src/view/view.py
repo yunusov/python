@@ -16,7 +16,6 @@ class View(metaclass=CatchAllMeta):
 
     def __init__(self, pd: PhoneDictionary):
         self.pd = pd
-        self.view_api = ViewApi(self.pd.get_current_dir() / self.pd.get_dict_folder())
 
     def clear_console(self):
         """Очистка консоли для отрисовки нового интерфейса"""
@@ -28,7 +27,7 @@ class View(metaclass=CatchAllMeta):
     def open_file(self):
         """Меню открытия файла"""
         logger.info("open_file")
-        dict_files = self.view_api.get_phone_dict_files()
+        dict_files = ViewApi.get_phone_dict_files(self.pd.get_current_dir() / self.pd.get_dict_folder())
         for key, file in dict_files.items():
             print(f"{key}. {file}")
         print("0 - выход в главное меню")
@@ -59,7 +58,7 @@ class View(metaclass=CatchAllMeta):
 
     def print_contact_table(self, contact_list: list = None):
         """Вывод таблицы с контактами"""
-        contact_list = contact_list if contact_list else self.pd.get_contacts_list()
+        contact_list = self.pd.get_contacts_list() if contact_list is None else contact_list
         table = PrettyTable(
             (
                 str.upper(CONTACT_FIELDS[0]),
@@ -89,35 +88,39 @@ class View(metaclass=CatchAllMeta):
         comment = input("Введите комментарий: ")
         try:
             contact = Contact(id, name, phone, comment)
-            self.pd.append_contact(contact)
-            logger.info(f"Контакт {contact.to_dict()} создан!")
-            input(f"\n\nКонтакт {contact.to_dict()} создан!")
         except ContactError as e:
             logger.error(e)
             input(f"\n\nКонтакт не создан по причине: '{e}'!")
+        else:
+            self.pd.append_contact(contact)
+            logger.info(f"Контакт {contact.to_dict()} создан!")
+            input(f"\n\nКонтакт {contact.to_dict()} создан!")
 
     def find_contact(self):
         """Меню поиска контакта"""
         logger.info("find_contact")
-        matched_contacts = list()
-        cmd = input("Введите значение для поиска по полям: ")
-        logger.info(f"{cmd = }")
-        if cmd:
-            for contact in self.pd.get_contacts_list():
-                if (
-                    contact.get("id") == cmd
-                    or cmd in contact.get("name")
-                    or cmd in contact.get("phone")
-                    or cmd in contact.get("comment")
-                ):
-                    matched_contacts.append(contact)
-        self.print_contact_table(matched_contacts)
-        logger.info(f"{matched_contacts = }")
-        input(f"\n\nПо вашему запросу найдено {len(matched_contacts)} стр.")
+        print("1. Поиск по имени")
+        print("2. Поиск по номеру телефона")
+        print("3. Поиск по всем полям")
+        print("0. Выход или <Enter>")
+        search_type =  input("\n\nКаким поиском хотите воспользоваться? ")
+        logger.info(f"{search_type = }")
+        if search_type in ("1", "2", "3"):
+            cmd = input("\n\nВведите значение для поиска. <Enter> - выход: ")
+            logger.info(f"{cmd = }")
+            if cmd:
+                matched_contacts = ViewApi.get_matched_contacts(
+                    search_type,
+                    cmd, 
+                    self.pd.get_contacts_list()
+                )
+                self.print_contact_table(matched_contacts)
+                logger.info(f"{matched_contacts = }")
+                input(f"\n\nПо вашему запросу найдено {len(matched_contacts)} стр.")
 
     def modify_contact(self):
         """Редактирование контакта"""
-        logger.info("change_contact")
+        logger.info("modify_contact")
         contacts_list = self.pd.get_contacts_list()
         self.print_contact_table()
         cmd = input("\nВведите ID изменяемого контакта: ")
@@ -138,13 +141,14 @@ class View(metaclass=CatchAllMeta):
                             phone if phone else contact.get("phone"),
                             comment if comment else contact.get("comment"),
                         )
+                    except ContactError as e:
+                        logger.error(e)
+                        input(f"\n\nКонтакт не изменён по причине: '{e}'!")
+                    else:
                         contacts_list.append(contact.to_dict())
                         self.pd.set_json_data(contacts_list)
                         logger.info(f"{fixed_contact = } {contact.to_dict() = }")
                         input(f"\nКонтакт {contact.to_dict()} был обновлён!")
-                    except ContactError as e:
-                        logger.error(e)
-                        input(f"\n\nКонтакт не изменён по причине: '{e}'!")
                     break
 
     def delete_contact(self):
@@ -160,8 +164,9 @@ class View(metaclass=CatchAllMeta):
                     self.pd.set_json_data(contacts_list)
                     logger.info(f"\nКонтакт {contact} был удалён!")
                     input(f"\nКонтакт {contact} был удалён!")
-                    return
-        input(f"\n\nКонтакт ID = {cmd} не обнаружен!")
+                    break
+            else:
+                input(f"\n\nКонтакт ID = {cmd} не обнаружен!")
 
     def exit_(self):
         """Выход из программы. Запрашивает сохранение файла при изменении данных."""
@@ -201,7 +206,7 @@ class View(metaclass=CatchAllMeta):
         Возвращает выбранную команду.
         """
         self.clear_console()
-        print(f"Телефонный справочник {self.pd.get_filename()}\n\n")
+        print(f"{self.pd.get_app_name()} v. {self.pd.get_app_version()} @{self.pd.get_filename()}\n\n")
         for key, value in self.MENU_METHOD_MAP.items():
             print(f"{key}. {value[0]}")
 

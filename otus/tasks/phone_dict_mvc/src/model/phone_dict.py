@@ -16,7 +16,13 @@ class PhoneDictionary:
         self.load_data()
 
     def get_dict_folder(self):
-        return Storage.dicts_folder    
+        return self.storage.dicts_folder    
+    
+    def get_app_name(self):
+        return self.storage.config.get_app_name()  
+    
+    def get_app_version(self):
+        return self.storage.config.get_app_version()  
 
     def get_json_data(self) -> dict:
         return self.json_data
@@ -62,6 +68,7 @@ class PhoneDictionary:
         """Установка флага изменения данных"""
         self.is_json_data_changed = is_json_data_changed
 
+    @classmethod
     def _is_integer(cls, string) -> bool:
         if isinstance(string, int):
             return True
@@ -72,5 +79,8 @@ class PhoneDictionary:
         result = 0
         contacts = self.get_contacts_list()
         if contacts:
-            result = max([int(x.get("id", "0")) for x in contacts if self._is_integer(x.get("id", "0"))])
+            try:
+                result = max([int(x.get("id", "0")) for x in contacts if self._is_integer(x.get("id", "0"))])
+            except ValueError:
+                return "1"
         return str(result + 1)

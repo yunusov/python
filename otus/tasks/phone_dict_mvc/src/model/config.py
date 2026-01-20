@@ -31,6 +31,26 @@ class Config(metaclass=CatchAllMeta):
             raise ConfigError(
                 "Конфигурационный файл повреждён. Обратитесь к разработчику."
             )
+        
+    def get_app_name(self) -> str:
+        """Получение имени файла данных телефонного справочника"""
+        try:
+            return self.config_file["app"]["name"]
+        except KeyError as e:
+            logger.error(e)
+            raise ConfigError(
+                "Конфигурационный файл повреждён. Обратитесь к разработчику."
+            )
+        
+    def get_app_version(self) -> str:
+        """Получение имени файла данных телефонного справочника"""
+        try:
+            return self.config_file["app"]["version"]
+        except KeyError as e:
+            logger.error(e)
+            raise ConfigError(
+                "Конфигурационный файл повреждён. Обратитесь к разработчику."
+            )
 
     def get_storage_folder(self) -> str:
         """Получение папки с файлом данных телефонного справочника"""

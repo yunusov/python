@@ -12,13 +12,15 @@ def main():
     src_dir = current_dir / "src"
     logger = AppLogger(src_dir).get_logger()
     try:
-        storage = Storage(src_dir, Config(current_dir))  
+        storage = Storage(src_dir, Config(current_dir))
         phone_dict = PhoneDictionary(storage)
         con_view = View(phone_dict)
     except Exception as e:
         logger.error(f"{e = }")
-        print(f"\n\nИсключение '{e}' прервало работу программы. "
-              "Обратитесь к разработчику.")
+        print(
+            f"\n\nИсключение '{e}' прервало работу программы. "
+            "Обратитесь к разработчику."
+        )
         exit()
 
     controller = Controller(con_view)

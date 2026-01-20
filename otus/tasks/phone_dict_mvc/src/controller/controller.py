@@ -4,6 +4,7 @@ from src.view import View
 
 class Controller:
     """Класс-контроллер программы телефонный справочник"""
+
     con_view: View
 
     def __init__(self, con_view: View):
@@ -16,7 +17,9 @@ class Controller:
         except KeyboardInterrupt as e:
             print("\n\nПользователь прекратил работу программы.")
         except Exception as e:
-            print(f"\n\nИсключение '{e}' прервало работу программы. Обратитесь к разработчику.")
+            print(
+                f"\n\nИсключение '{e}' прервало работу программы. Обратитесь к разработчику."
+            )
             logger.error(e)
         finally:
             exit()
