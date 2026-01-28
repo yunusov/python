@@ -13,11 +13,11 @@ if errorlevel 1 (
     exit /b 1
 )
 
-pip install --upgrade pip
+python -m pip install --upgrade pip
 
 if exist "requirements.txt" (
     echo Установка зависимостей...
-    pip install -r requirements.txt
+    python -m pip install -r requirements.txt
 )
 
 python main.py

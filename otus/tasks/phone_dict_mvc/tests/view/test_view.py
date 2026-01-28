@@ -1,41 +1,17 @@
 import io
 import os
-import random
-import string
-from pathlib import Path
-from unittest.mock import patch
-
 import pytest
+import random
+from pathlib import Path
+
 
 from src.common import AppLogger
-from src.model import Storage, PhoneDictionary, Config
-from src.view import View
 
 
 CURRENT_DIR = Path(__file__).parent.parent
 RESOURCE_DIR = CURRENT_DIR / "resources"
 DICTS_DIR = RESOURCE_DIR / "dicts"
 logger = AppLogger(CURRENT_DIR).get_logger()
-ALL_CHARS = string.ascii_letters + string.digits
-
-
-@pytest.fixture
-def view():
-    return View(PhoneDictionary(Storage(RESOURCE_DIR, Config(RESOURCE_DIR))))
-
-
-@pytest.fixture
-def rand_string() -> str:
-    """Генерирует случайный строку из букв и цифр."""
-    result = random.choices(ALL_CHARS, k=8)
-    return "".join(result)
-
-
-@pytest.fixture
-def rand_phone() -> str:
-    """Генерирует случайный строку из цифр."""
-    result = random.choices(string.digits, k=8)
-    return "".join(result)
 
 
 def get_last_output(capsys):
@@ -107,7 +83,7 @@ def test_create_contact_params(view, contact, monkeypatch, capsys):
     )
 
 
-def test_create_empty_name_contact(view, monkeypatch, capsys):
+def test_create_empty_name_contact(view, monkeypatch, capsys, mocker):
     """Тестируем создание 'пустого' контакта"""
     monkeypatch.setattr(
         "sys.stdin",
@@ -120,8 +96,8 @@ def test_create_empty_name_contact(view, monkeypatch, capsys):
         output == "Контакт не создан по причине: 'Имя контакта не должно быть пустое'!"
     )
 
-    with patch("src.model.PhoneDictionary.get_next_id", return_value=None):
-        view.create_contact()
+    mocker.patch("src.model.PhoneDictionary.get_next_id", return_value=None)
+    view.create_contact()
     output = get_last_output(capsys)
 
     assert (
@@ -174,7 +150,7 @@ def test_find_contact(view, rand_string, rand_phone, search_type, monkeypatch, c
     assert output == "По вашему запросу найдено 0 стр."
 
 
-def test_modify_contact(view, rand_string, rand_phone, monkeypatch, capsys):
+def test_modify_contact(view, rand_string, rand_phone, monkeypatch, capsys, mocker):
     """Тестируем изменение контакта"""
     user_id = "".join([rand_string, rand_phone])
     modify_name = rand_string + "name"
@@ -203,8 +179,8 @@ def test_modify_contact(view, rand_string, rand_phone, monkeypatch, capsys):
             )
         ),
     )
-    with patch("src.model.PhoneDictionary.get_next_id", return_value=user_id):
-        view.create_contact()
+    mocker.patch("src.model.PhoneDictionary.get_next_id", return_value=user_id)
+    view.create_contact()
 
     view.modify_contact()
     output = get_last_output(capsys)
@@ -228,7 +204,7 @@ def test_modify_contact(view, rand_string, rand_phone, monkeypatch, capsys):
     )
 
 
-def test_delete_contact(view, rand_string, rand_phone, monkeypatch, capsys):
+def test_delete_contact(view, rand_string, rand_phone, monkeypatch, capsys, mocker):
     """Тестируем удаление пользователя"""
     user_id = "".join([rand_string, rand_phone])
     monkeypatch.setattr(
@@ -248,8 +224,8 @@ def test_delete_contact(view, rand_string, rand_phone, monkeypatch, capsys):
             )
         ),
     )
-    with patch("src.model.PhoneDictionary.get_next_id", return_value=user_id):
-        view.create_contact()
+    mocker.patch("src.model.PhoneDictionary.get_next_id", return_value=user_id)
+    view.create_contact()
 
     view.delete_contact()
     output = get_last_output(capsys)
@@ -269,7 +245,7 @@ def test_delete_contact(view, rand_string, rand_phone, monkeypatch, capsys):
     "cmd",
     ["Y", "\r", "N"],
 )
-def test_exit(view, cmd, rand_string, rand_phone, monkeypatch, capsys):
+def test_exit(view, cmd, rand_string, rand_phone, monkeypatch, mocker):
     """Тестируем выход из программы"""
     logger.info("test_exit")
     user_id = "".join([rand_string, rand_phone])
@@ -292,25 +268,27 @@ def test_exit(view, cmd, rand_string, rand_phone, monkeypatch, capsys):
             )
         ),
     )
-    with patch("src.model.PhoneDictionary.get_next_id", return_value=user_id):
-        view.create_contact()
-    with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
-        with patch("sys.exit", return_value=None):
-            view.exit_()
-        output = mock_stdout.getvalue()
-        logger.info(f"{output = } {cmd = } {view.pd.get_filename() = }")
-        assert "Вы вышли из программы" in output
+    mocker.patch("src.model.PhoneDictionary.get_next_id", return_value=user_id)
+    view.create_contact()
+    captured_output = io.StringIO()
+    mocker.patch("sys.stdout", captured_output)
+    mocker.patch("sys.exit", return_value=None)
+    view.exit_()
+    
+    output = captured_output.getvalue()
+    logger.info(f"{output = } {cmd = } {view.pd.get_filename() = }")
+    assert "Вы вышли из программы" in output
 
     if cmd != "N":
+        # mocker.stopall()
         view.find_contact()
         logger.info(f"{view.pd.get_filename() = }")
-        output = get_last_output(capsys)
+        output = captured_output.getvalue().split("\n")[-1]
 
         assert output == "По вашему запросу найдено 1 стр."
         view.delete_contact()
 
-        output = get_last_output(capsys)
-
+        output = captured_output.getvalue().split("\n")[-1]
         assert all(
             sub in output
             for sub in ["Контакт", "был удалён!", rand_string, rand_phone, user_id]
