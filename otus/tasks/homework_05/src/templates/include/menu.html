@@ -1,0 +1,40 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <div class="container-fluid">
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        {% if username %}
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="{{ url_for('create') }}"><img src="{{ url_for('images', path='add-user.png') }}" class="img" alt="Добавить контакт" width="24" height="24" data-bs-toggle="tooltip" title="Добавить контакт">  Добавить контакт</a>
+        </li>
+        {% endif %}
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="{{ url_for('home') }}"><img src="{{ url_for('images', path='home.png') }}" class="img" alt="Домой" width="24" height="24" data-bs-toggle="tooltip" title="Домой">  Домой</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('html_about') }}"><img src="{{ url_for('images', path='info.png') }}" class="img" alt="О нас" width="24" height="24" data-bs-toggle="tooltip" title="О нас">  О нас</a>
+        </li>
+      </ul>
+      {% if username %}
+      <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <form class="d-flex" action="/search/">
+            <input class="form-control me-2" type="search" placeholder="Введите текст" aria-label="Search" id="search_str" name="search_str">
+            <button class="btn btn-outline-success" type="submit">Поиск</button>
+          </form>
+        </li>
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              {{ username }}
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+              <li><a class="dropdown-item" href="/reset">Выход</a></li>
+            </ul>
+        </li>
+      </ul>
+      {% endif %}
+    </div>
+  </div>
+</nav>

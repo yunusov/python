@@ -22,15 +22,23 @@
 
 from fastapi import FastAPI
 
+from fastapi.staticfiles import StaticFiles
+from starlette.middleware.sessions import SessionMiddleware
 import uvicorn
+from src.routers.main_pages import router as main_pages_router
+from src.routers.api_router import router as api_router
+from src.routers.operations import router as operations_router
+from src import MIDDLEWARE_SECRET_KEY, SERVER_IP, SERVER_PORT
+
 
 app = FastAPI()
+app.mount("/images", StaticFiles(directory="src\\images"), name="images")
+app.add_middleware(SessionMiddleware, secret_key=MIDDLEWARE_SECRET_KEY)
 
-
-@app.get("/")
-def hello_index():
-    return {"message": "Hello"}
+app.include_router(main_pages_router, tags=["Main pages"])
+app.include_router(operations_router, tags=["Contact operations"])
+app.include_router(api_router, tags=["API contacts"], prefix="/api/v1")
 
 
 if __name__ == "__main__":
-    uvicorn.run("app:app", reload=True)
+    uvicorn.run("app:app", host=SERVER_IP, port=SERVER_PORT, reload=True)

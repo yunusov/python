@@ -1,0 +1,46 @@
+{
+    "contacts": [
+        {
+            "comment": "Коллега из отдела IT",
+            "id": "1",
+            "name": "Иван Иванов",
+            "owner": "rambler",
+            "phone": "89277998877"
+        },
+        {
+            "comment": "Коллега из отдела IT",
+            "id": "2",
+            "name": "Иван Петров",
+            "owner": "rambler",
+            "phone": "+7925361723"
+        },
+        {
+            "comment": "Глав. бух.",
+            "id": "3",
+            "name": "Светлана Семёновна",
+            "owner": "",
+            "phone": "999"
+        },
+        {
+            "comment": "HR",
+            "id": "4",
+            "name": "Маргарита Степановна",
+            "owner": "",
+            "phone": "911"
+        },
+        {
+            "comment": "RnD",
+            "id": "5",
+            "name": "Rodger Vilko",
+            "owner": "yandex",
+            "phone": "11002345442"
+        },
+        {
+            "comment": "Umbrella Corp.",
+            "id": "6",
+            "name": "Leon Kennedy",
+            "owner": "yandex",
+            "phone": "88002000600"
+        }
+    ]
+}

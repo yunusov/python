@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+
+<div class="card" style="width: 18rem;">
+    <img src="{{ url_for('images', path='myPhoto.jpg') }}" class="card-img-top" alt="Developer photo">
+    <div class="card-body">
+        <h5 class="card-title">О программе</h5>
+        <p class="card-text">Программа "Телефонный справочник" разработана для домашней работы №5 слушателем курса Otus "Python Basic" Виталием Юнусовым в 2026 году</p>
+    </div>
+    <div class="card-body">
+        <a href="https://vk.com/id381916697" class="card-link">Профиль VK</a>
+        <a href="https://t.me/vitaly_yunusov" class="card-link">Профиль Telegram</a>
+    </div>
+</div>
+
+{% endblock %}

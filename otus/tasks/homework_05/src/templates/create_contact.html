@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ operation }} контакта{% endblock %}
+
+{% block content %}
+
+<div class="card" style="width: 18rem;">
+    <div class="card-body">
+        <form class="row g-3" method="post" action="/{{ action }}/">
+            <input type="text" class="form-control" id="id" name="id" value="{{ id }}" hidden>
+            <div class="col-auto">
+                <label for="name" class="">Имя: </label>
+                <input type="text" class="form-control" id="name" name="name" placeholder="Введите имя контакта" value="{{ name }}" autocomplete = "on">
+            </div>
+            <br>
+            <div class="col-auto">
+                <label for="phone" class="">Номер телефона: </label>
+                <input type="text" class="form-control" id="phone" name="phone" placeholder="Введите номер телефона" value="{{ phone }}" autocomplete = "on">
+            </div>
+            <br>
+            <div class="col-auto">
+                <label for="comment" class="">Комментарий: </label>
+                <input type="text" class="form-control" id="comment" name="comment" placeholder="Введите комментарий" value="{{ comment }}" autocomplete = "on">
+            </div>
+            <br>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary mb-3">Сохранить</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

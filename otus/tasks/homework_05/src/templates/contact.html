@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ contact.name }} - {{ contact.phone }}{% endblock %}
+
+{% block content %}
+
+<div class="card" style="width: 18rem;">
+    <img src="{{ url_for('images', path='male.png') }}" class="card-img-top" alt="Contact photo">
+    <div class="card-body">
+        <h5 class="card-title">Имя: {{ contact.name }}</h5>
+        <h5 class="card-text">Телефон: {{ contact.phone }}</h5>
+        <p class="card-text">Комментарий: {{ contact.comment }}</p>
+    </div>
+</div>
+
+{% endblock %}
