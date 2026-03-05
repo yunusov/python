@@ -14,8 +14,11 @@ templates = Jinja2Templates(directory="src/templates")
 @router.get("/", response_class=HTMLResponse, name="home")
 async def index(request: Request):
     """Запрос полного списка пользователей"""
-    username = request.session["username"]
-    return await _response_index_html(request, username)
+    username = request.session.get("username", None)
+    if username:
+        return await _response_index_html(request, username)
+    else:
+        return templates.TemplateResponse(request, "index.html")
 
 
 @router.post("/login/", response_class=HTMLResponse, name="login")
@@ -44,8 +47,7 @@ async def _response_index_html(request: Request, username: str):
 @router.get("/about/", response_class=HTMLResponse, name="html_about")
 async def about(request: Request):
     """Вызов страницы about.html"""
-    username = request.session["username"]
-    context = {"title": "О программе", "username": username}
+    context = {"title": "О программе"}
     return templates.TemplateResponse(request, "about.html", context)
 
 

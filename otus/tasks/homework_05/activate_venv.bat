@@ -1,4 +1,4 @@
 if not exist ".venv" (
-    py -m venv .venv
+    python -m venv .venv
 )
 .venv\Scripts\activate
