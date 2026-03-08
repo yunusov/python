@@ -1,0 +1,3 @@
+docker login
+docker tag fastapi_docker_app:latest v300187/fastapi_docker_app:latest
+docker push v300187/fastapi_docker_app:latest

@@ -1,0 +1,1 @@
+docker run -p 8000:8000 -it --name my_docker_cont fastapi_docker_app:latest
