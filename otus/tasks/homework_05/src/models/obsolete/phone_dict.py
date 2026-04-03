@@ -1,4 +1,4 @@
-from .contact import Contact
+from ..contact import Contact
 from .storage import Storage
 from pathlib import Path
 
