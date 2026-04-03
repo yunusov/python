@@ -5,8 +5,8 @@ class Contact(BaseModel):
 
     id: str
     name: str
-    phone: str
-    comment: str
+    phone: str | None
+    comment: str | None
     owner: str
 
 

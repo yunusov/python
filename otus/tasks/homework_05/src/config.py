@@ -1,16 +1,38 @@
-import os
-from dotenv import load_dotenv
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from pathlib import Path
 
 from src.models import PhoneDictionary, Storage
 
-load_dotenv()
-MIDDLEWARE_SECRET_KEY = os.getenv("MIDDLEWARE_SECRET_KEY")
-SERVER_IP = os.getenv("SERVER_IP")
-str_server_port = os.getenv("SERVER_PORT")
-SERVER_PORT = int(str_server_port)
-SERVER_URL = "http://" + SERVER_IP + ":" + str_server_port
+class Settings(BaseSettings):
+    DB_HOST: str
+    DB_PORT: int
+    DB_USER: str
+    DB_PASS: str
+    DB_NAME: str
 
-parent_folder = Path(__file__).parent
-storage = Storage(parent_folder)
-phone_dict = PhoneDictionary(storage)
+    MIDDLEWARE_SECRET_KEY: str
+    SERVER_IP: str
+    SERVER_PORT: str
+
+
+    @property
+    def DATABASE_URL(self):
+        return f"postgresql+psycopg://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+    
+    @property
+    def DATABASE_URL_ASYNC(self):
+        return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+    
+    @property
+    def SERVER_URL(self):
+        return "http://" + self.SERVER_IP + ":" + self.SERVER_PORT
+    
+    @property
+    def PHONE_DICT(self):
+        parent_folder = Path(__file__).parent
+        storage = Storage(parent_folder)
+        return PhoneDictionary(storage)
+
+    model_config = SettingsConfigDict(env_file="src/.env")
+
+settings = Settings()

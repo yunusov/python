@@ -1,138 +1,94 @@
 from fastapi import APIRouter, Query
 
-from src import phone_dict
+from src.queries.core import (
+    select_contacts,
+    get_contact_by_id,
+    create_contact,
+    modify_contact,
+    delete_contact,
+)
 from src.models.contact import Contact
 from src.utils.loguru_config import AppLogger
 
 logger = AppLogger().get_logger()
-
 router = APIRouter()
 
 
 @router.get("/contacts", response_model=list[Contact])
-async def get_contacts_list(username: str = Query("", description="Имя пользователя")):
+async def get_contacts_list(user_id: str = Query("", description="ID пользователя")):
     """Получить список контактов."""
-    result = phone_dict.get_contacts_list()
-    logger.info(f"{username = }; {result = }")
-    if username:
-        result = [
-            contact
-            for contact in result
-            if contact["owner"] == username
-            or contact["owner"] == ""
-            or username.lower() == "admin"
-        ]
-    logger.info(f"{result = }")
+    contacts_orm = select_contacts(p_owner=user_id)
+    result = [contact_orm.to_contact() for contact_orm in contacts_orm]
     return result
 
 
 @router.get("/contacts/{contact_id}", response_model=Contact)
 async def get_contact(
-    contact_id: str, username: str = Query("", description="Имя пользователя")
+    contact_id: str, user_id: str = Query("", description="ID пользователя")
 ):
     """Получить данные контакта."""
-    result = phone_dict.get_contacts_list()
+    orm_contact = get_contact_by_id(contact_id, user_id)
+    result = orm_contact.to_contact()
 
-    logger.info(f"{username = }; {contact_id = }; {result = }")
-
-    if username:
-        result = [
-            contact
-            for contact in result
-            if (
-                contact["owner"] == username
-                or contact["owner"] == ""
-                or username.lower() == "admin"
-            )
-            and contact["id"] == contact_id
-        ]
-
-    return result[0]
+    logger.info(f"{user_id = }; {contact_id = }; {result = }")
+    return result
 
 
 @router.post("/contacts", response_model=Contact)
 async def add_contact(
-    username: str = Query(None, description="username"),
+    user_id: str = Query(None, description="user_id"),
     name: str = Query(None, description="Имя контакта"),
     phone: str = Query("", description="Телефонный номер контакта"),
     comment: str = Query("", description="Комментарий для контакта"),
 ):
     """Добавить контакт"""
-    id = phone_dict.get_next_id()
-    logger.info(f"{name =}; {phone = }; {comment = }; {username = }")
-    contact = Contact(id=id, name=name, phone=phone, comment=comment, owner=username)
-    phone_dict.append_contact(contact)
+    logger.info(f"{name =}; {phone = }; {comment = }; {user_id = }")
+    contact = Contact(
+        id=str(id), name=name, phone=phone, comment=comment, owner=str(user_id)
+    )
+    create_contact(contact)
 
     return contact
 
 
 @router.put("/contacts")
-async def modify_contact(
+async def edit_contact(
     contact_id: str = Query(None, description="ID контакта"),
-    username: str = Query(None, description="username"),
+    user_id: str = Query(None, description="user_id"),
     name: str = Query(None, description="Имя контакта"),
     phone: str = Query("", description="Телефонный номер контакта"),
     comment: str = Query("", description="Комментарий для контакта"),
 ):
     """Изменить контакт"""
-    if username:
-        result = phone_dict.get_contact(contact_id)
-        if result:
-            phone_dict.delete_contact(result)
-            contact = Contact(
-                id=contact_id,
-                name=name,
-                phone=phone,
-                comment=comment,
-                owner=username,
-            )
-            phone_dict.append_contact(contact)
-            return contact
+    if user_id:
+        contact = Contact(
+            id=contact_id,
+            name=name,
+            phone=phone,
+            comment=comment,
+            owner=user_id,
+        )
+        modify_contact(contact)
     return {}
 
 
 @router.delete("/contacts/{contact_id}")
-async def delete_contact(
-    contact_id: str, username: str = Query(None, description="username")
+async def remove_contact(
+    contact_id: str,
+    user_id: str = Query(None, description="user_id"),
 ):
     """Удалить контакт"""
-    if username:
-        result = phone_dict.get_contacts_list()
-        result = [
-            contact
-            for contact in result
-            if (
-                contact["owner"] == username
-                or contact["owner"] == ""
-                or username.lower() == "admin"
-            )
-            and contact["id"] == contact_id
-        ]
-        if result:
-            phone_dict.delete_contact(result[0])
-            return {"message": f"Контакт {contact_id} был удален"}
+    delete_contact(contact_id, user_id)
     return {}
 
 
 @router.get("/search")
 async def search_contacts(
-    username: str = Query(None, description="username"),
-    search_str: str = Query(None, description="username"),
+    user_id: str = Query(None, description="user_id"),
+    search_str: str = Query(None, description="Строка для поиска"),
 ):
     """Найти контакты"""
-    if username:
-        result = phone_dict.get_contacts_list()
-        result = [
-            contact
-            for contact in result
-            if (
-                contact["owner"] == username
-                or contact["owner"] == ""
-                or username.lower() == "admin"
-            )
-            and (search_str in contact["name"] or
-                 search_str in contact["phone"] or
-                 search_str in contact["comment"] or
-                 search_str == contact["id"])
-        ]
+    logger.info(f"{user_id=}, {search_str=}")
+    if user_id:
+        result = select_contacts(p_owner=user_id, p_filter=search_str)
         return result

@@ -1,3 +1,3 @@
-from .config import MIDDLEWARE_SECRET_KEY, SERVER_IP, SERVER_PORT, SERVER_URL, phone_dict
+from .config import settings
 
-__all__ = ["MIDDLEWARE_SECRET_KEY", "SERVER_IP", "SERVER_PORT", "SERVER_URL", "phone_dict"]
+__all__ = ["settings"]

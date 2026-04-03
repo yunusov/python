@@ -21,24 +21,36 @@
 """
 
 from fastapi import FastAPI
-
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi import Request, status
 from starlette.middleware.sessions import SessionMiddleware
 import uvicorn
+
+from src.utils.loguru_config import AppLogger
 from src.routers.main_pages import router as main_pages_router
 from src.routers.api_router import router as api_router
 from src.routers.operations import router as operations_router
-from src import MIDDLEWARE_SECRET_KEY, SERVER_IP, SERVER_PORT
+from src import settings
 
-
+logger = AppLogger().get_logger()
 app = FastAPI()
 app.mount("/images", StaticFiles(directory="src\\images"), name="images")
-app.add_middleware(SessionMiddleware, secret_key=MIDDLEWARE_SECRET_KEY)
+app.add_middleware(SessionMiddleware, secret_key=settings.MIDDLEWARE_SECRET_KEY)
 
 app.include_router(main_pages_router, tags=["Main pages"])
 app.include_router(operations_router, tags=["Contact operations"])
 app.include_router(api_router, tags=["API contacts"], prefix="/api/v1")
 
 
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Global error: {exc}")
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={"detail": f"Внутренняя ошибка: {str(exc)}"}
+    )
+
+
 if __name__ == "__main__":
-    uvicorn.run("app:app", host=SERVER_IP, port=SERVER_PORT, reload=True)
+    uvicorn.run("app:app", host=settings.SERVER_IP, port=int(settings.SERVER_PORT), reload=True)
