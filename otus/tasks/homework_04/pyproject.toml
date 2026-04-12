@@ -1,0 +1,17 @@
+[project]
+name = "homework-04"
+version = "0.1.0"
+description = "OTUS 2026. homework-04. Vitaly Yunusov"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "aiohttp>=3.13.5",
+    "asyncpg>=0.31.0",
+    "fastapi[standard]>=0.135.3",
+    "psycopg[binary]>=3.3.3",
+    "pydantic-settings>=2.13.1",
+    "requests>=2.33.1",
+    "ruff>=0.15.9",
+    "sqlalchemy[asyncio]>=2.0.49",
+    "uvicorn>=0.43.0",
+]

@@ -1,0 +1,30 @@
+from urllib.parse import quote_plus
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    DB_HOST: str
+    DB_PORT: int
+    DB_USER: str
+    DB_PASS: str
+    DB_NAME: str
+
+    MIDDLEWARE_SECRET_KEY: str
+    SERVER_IP: str
+    SERVER_PORT: str
+
+    @property
+    def DATABASE_URL_ASYNC(self):
+        user = quote_plus(self.DB_USER)
+        password = quote_plus(self.DB_PASS)
+        return f"postgresql+asyncpg://{user}:{password}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+
+    @property
+    def SERVER_URL(self):
+        return "http://" + self.SERVER_IP + ":" + self.SERVER_PORT
+
+    model_config = SettingsConfigDict(env_file="src/.env")
+
+
+settings = Settings()

@@ -1,0 +1,9 @@
+pip install uv # установка uv
+uv init # инициализация репозитория
+uv add aiohttp sqlalchemy # добавляет зависимости
+uv remove aiohttp # удаляет зависимость
+uv python list # доступные и установленные версии питона
+uv python install <версия питона> # установка новой версии питона
+uv python pin 3.14 # использовать для проекта версию python 3.14
+uv sync # обновить версии
+uv tree # дерево пакетов
