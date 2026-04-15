@@ -37,7 +37,7 @@ class BaseCls(DeclarativeBase):
     metadata = metadata_obj
 
 
-class UsersOrm(BaseCls):
+class UserOrm(BaseCls):
     """Класс-пользователя"""
 
     __tablename__ = "hw4_users"
@@ -58,4 +58,4 @@ class PostOrm(BaseCls):
     title: Mapped[str]
     body: Mapped[str]
 
-    user: Mapped["UsersOrm"] = relationship(back_populates="posts")
+    user: Mapped["UserOrm"] = relationship(back_populates="posts")
