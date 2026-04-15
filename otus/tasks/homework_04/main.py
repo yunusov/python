@@ -28,7 +28,7 @@ async def async_main():
 
 
 async def load_json_data():
-    '''Загружаем данные'''
+    """Загружаем данные"""
     users_data: list[dict]
     posts_data: list[dict]
     # Создаем задачи для конкурентного выполнения
@@ -43,7 +43,7 @@ async def load_json_data():
 
 @connection
 async def fulfill_users(users_data: list[dict], session):
-    '''Заполняем таблицу пользователей'''
+    """Заполняем таблицу пользователей"""
     users_list = [
         UserOrm(
             username=user_data["username"],
@@ -58,7 +58,7 @@ async def fulfill_users(users_data: list[dict], session):
 
 @connection
 async def fulfill_posts(users_data: list[dict], session):
-    '''Заполняем таблицу постов'''
+    """Заполняем таблицу постов"""
     posts_list = [
         PostOrm(
             user_id=user_data["userId"],
@@ -72,16 +72,21 @@ async def fulfill_posts(users_data: list[dict], session):
 
 
 async def create_tables():
-    '''Подготовка таблиц'''
+    """Подготовка таблиц"""
     async with async_engine.begin() as conn:
-        query = await conn.execute(text(
-            """SELECT 1
+        query = await conn.execute(
+            text(
+                """SELECT 1
                  FROM information_schema.tables 
                 WHERE table_schema = 'public' 
-                  AND lower(table_name) IN ('hw4_users', 'hw4_posts') """))
+                  AND lower(table_name) IN ('hw4_users', 'hw4_posts') """
+            )
+        )
         result = query.scalar()
         if result:
-             await conn.execute(text("TRUNCATE hw4_users, hw4_posts RESTART IDENTITY CASCADE"))
+            await conn.execute(
+                text("TRUNCATE hw4_users, hw4_posts RESTART IDENTITY CASCADE")
+            )
         else:
             await conn.run_sync(BaseCls.metadata.drop_all)
             await conn.run_sync(BaseCls.metadata.create_all)
