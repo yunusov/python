@@ -1,0 +1,9 @@
+alembic init src/migrations
+
+alembic revision --autogenerate
+
+alembic upgrade head
+
+alembic downgrade <rev_num>
+
+alembic downgrade base
