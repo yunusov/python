@@ -1,5 +1,6 @@
 
 from sqlalchemy import (
+    Sequence,
     or_,
     select,
 )
@@ -73,7 +74,7 @@ def insert_user():
     #     conn.commit()
 
 
-def select_contacts(p_owner: str, p_filter: str = None) -> list[ContactsOrm]:
+def select_contacts(p_owner: str, p_filter: str = None) -> Sequence[ContactsOrm]:
     """Получить список контактов"""
     with session_factory() as session:
         query = select(ContactsOrm).filter(
@@ -107,8 +108,8 @@ def get_contact_by_id(contact_id: str, owner_id: str) -> ContactsOrm:
             ContactsOrm.id == int(contact_id),
         )
         result = session.execute(query)
-        contact = result.scalars().one_or_none()
-        return contact
+        contact_orm = result.scalars().one_or_none()
+        return contact_orm
 
 
 def get_user_by_name(username: str) -> UsersOrm:
@@ -127,12 +128,12 @@ def get_user_by_name(username: str) -> UsersOrm:
 def create_contact(contact: Contact) -> ContactsOrm:
     """Создать контакт для пользователя"""
     with session_factory() as session:
-        contact = ContactsOrm(contact)
-        session.add(contact)
+        contact_orm = ContactsOrm(contact)
+        session.add(contact_orm)
         session.commit()
-        session.refresh(contact)
-        logger.info(f"Создан контакт {contact=}")
-    return contact
+        session.refresh(contact_orm)
+        logger.info(f"Создан контакт {contact_orm=}")
+    return contact_orm
 
 
 def modify_contact(contact: Contact) -> ContactsOrm:
@@ -149,10 +150,10 @@ def modify_contact(contact: Contact) -> ContactsOrm:
             # to-do: contact_orm.scope = ???
 
             session.commit()
-    return contact
+    return contact_orm
 
 
-def delete_contact(contact_id: str, user_id: str) -> ContactsOrm:
+def delete_contact(contact_id: str, user_id: str):
     """Удалить контакт пользователя"""
     with session_factory() as session:
         query = select(ContactsOrm).filter_by(owner_id=int(user_id), id=int(contact_id))
@@ -160,4 +161,3 @@ def delete_contact(contact_id: str, user_id: str) -> ContactsOrm:
         if contact_orm:
             session.delete(contact_orm)
             session.commit()
-    return contact_id

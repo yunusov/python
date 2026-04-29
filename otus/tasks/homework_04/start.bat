@@ -18,4 +18,4 @@ if errorlevel 1 (
 
 @rem Используем локальную .venv
 set UV_PROJECT_ENVIRONMENT=.venv
-uv run main.py
+fastapi run --workers 2

@@ -1,14 +1,18 @@
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from src.config import settings
+from src.loguru_config import AppLogger
 
+logger = AppLogger().get_logger()
+
+logger.info(f"{settings.DATABASE_URL_ASYNC=}")
 async_engine = create_async_engine(
     url=settings.DATABASE_URL_ASYNC,
     echo=True,
     connect_args={
         "ssl": False,
         "statement_cache_size": 0,
-        "server_settings": {"search_path": "alembic_schema"},
+        #"server_settings": {"search_path": "alembic_schema"},
     },
     pool_pre_ping=True,
     pool_size=5,

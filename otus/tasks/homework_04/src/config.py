@@ -4,15 +4,15 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    DB_HOST: str
-    DB_PORT: int
-    DB_USER: str
-    DB_PASS: str
-    DB_NAME: str
+    DB_HOST: str = "pg"
+    DB_PORT: int = 5432
+    DB_USER: str = "app"
+    DB_PASS: str = "password"
+    DB_NAME: str = "blog"
 
-    MIDDLEWARE_SECRET_KEY: str
-    SERVER_IP: str
-    SERVER_PORT: str
+    MIDDLEWARE_SECRET_KEY: str = "secret"
+    SERVER_IP: str = "127.0.0.1"
+    SERVER_PORT: str = "8000"
 
     @property
     def DATABASE_URL_ASYNC(self):

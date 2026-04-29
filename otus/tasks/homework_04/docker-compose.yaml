@@ -1,0 +1,46 @@
+services:
+  blog:
+    build:
+      context: ./
+      dockerfile: docker-build/blog-app/Dockerfile
+    command:
+      - "fastapi"
+      - "run"
+      - "--host"
+      - "0.0.0.0"
+      - "--workers"
+      - "2"
+    ports:
+      - "8000:8000"
+    depends_on:
+      pg:
+        condition: service_healthy
+    networks:
+      - app-network
+
+
+  pg:
+    image: postgres:18.3-alpine
+    environment:
+      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: blog
+      POSTGRES_USER: app
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d blog"]
+      interval: 2s
+      timeout: 1s
+      retries: 3
+    networks:
+      - app-network
+
+volumes:
+  pg-data:
+
+networks:
+  app-network:
+    driver: bridge

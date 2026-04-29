@@ -11,86 +11,55 @@
 - добавление пользователей и постов в базу данных
   (используйте полученные из запроса данные, передайте их в функцию для добавления в БД)
 - закрытие соединения с БД
+
+
+
+Описание/Пошаговая инструкция выполнения домашнего задания:
+создайте docker-compose файл, настройте там связь базы данных и веб-приложения
+добавьте в свой проект модели. Это могут быть те же модели, что были использованы для сохранения данных с открытого API, это может быть и что-то новое
+добавьте возможность создавать новые записи
+создайте страницу, на которой эти записи выводятся
+база данных должна быть в отдельном контейнере
+Flask приложение должно запускаться не в debug режиме, а в production-ready (uwsgi/gunicorn, nginx, Flask)
+
+Критерии оценки:
+docker-compose файл присутствует и работает
+приложение взаимодействует с БД
+в приложении есть возможность добавить записи, они сохраняются в БД
+в приложении есть страница, которая выдаёт доступные записи (вытаскивает из БД)
+Flask приложение настроено для запуска в production режиме (uwsgi, nginx, gunicorn)
+
 """
+
+from contextlib import asynccontextmanager
+import sys
+import os
+
+# Добавляем корневую папку проекта в PYTHONPATH
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import asyncio
 
-from sqlalchemy import text
-
-from src.models import BaseCls, UserOrm, PostOrm
-from src.database import async_engine, connection
-from src.jsonplaceholder_requests import fetch_posts_data, fetch_users_data
+from fastapi import FastAPI
+import uvicorn
 
 
-async def async_main():
+from src.core import create_tables
+from src.routers.main_pages import router as main_pages_router
+from src.routers.api_router import router as api_router
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     await create_tables()
-    await load_json_data()
+    yield
 
 
-async def load_json_data():
-    """Загружаем данные"""
-    users_data: list[dict]
-    posts_data: list[dict]
-    # Создаем задачи для конкурентного выполнения
-    task1 = asyncio.create_task(fetch_users_data())
-    task2 = asyncio.create_task(fetch_posts_data())
+app = FastAPI(lifespan=lifespan)
+app.include_router(main_pages_router, tags=["Main pages"])
+app.include_router(api_router, tags=["API Router"])
 
-    # Ожидаем завершения всех задач конкурентно
-    users_data, posts_data = await asyncio.gather(task1, task2)
-    await fulfill_users(users_data)
-    await fulfill_posts(posts_data)
-
-
-@connection
-async def fulfill_users(users_data: list[dict], session):
-    """Заполняем таблицу пользователей"""
-    users_list = [
-        UserOrm(
-            username=user_data["username"],
-            name=user_data["name"],
-            email=user_data["email"],
-        )
-        for user_data in users_data
-    ]
-    session.add_all(users_list)
-    await session.commit()
-
-
-@connection
-async def fulfill_posts(users_data: list[dict], session):
-    """Заполняем таблицу постов"""
-    posts_list = [
-        PostOrm(
-            user_id=user_data["userId"],
-            title=user_data["title"],
-            body=user_data["body"],
-        )
-        for user_data in users_data
-    ]
-    session.add_all(posts_list)
-    await session.commit()
-
-
-async def create_tables():
-    """Подготовка таблиц"""
-    async with async_engine.begin() as conn:
-        query = await conn.execute(
-            text(
-                """SELECT 1
-                 FROM information_schema.tables 
-                WHERE table_schema = 'public' 
-                  AND lower(table_name) IN ('hw4_users', 'hw4_posts') """
-            )
-        )
-        result = query.scalar()
-        if result:
-            await conn.execute(
-                text("TRUNCATE hw4_users, hw4_posts RESTART IDENTITY CASCADE")
-            )
-        else:
-            await conn.run_sync(BaseCls.metadata.drop_all)
-            await conn.run_sync(BaseCls.metadata.create_all)
-
-
-if __name__ == "__main__":
-    asyncio.run(async_main())
+#if __name__ == "__main__":
+    # asyncio.run(create_tables())
+    # uvicorn.run("main:app", reload=True)
+    

@@ -1,0 +1,14 @@
+#Собрать docker-compose
+docker compose build
+
+#Остановить  контейнеры
+docker compose stop
+
+#Запустить app
+docker compose up --build blog
+
+#Просмотреть логи
+docker compose logs blog
+
+#Остановить и удалить контейнеры в т.ч. Volume
+docker compose down -v
