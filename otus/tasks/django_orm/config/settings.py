@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # My apps
     "store_app.apps.StoreAppConfig",
+    "drf_yasg",
 ]
 
 MIDDLEWARE = [
