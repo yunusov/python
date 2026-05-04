@@ -20,14 +20,22 @@
 
 Запуск:
 Перед запуском необходимо задать параметры в файле django_orm/config/.env:
-SECRET_KEY=<your secret key. Any string.>
-DEBUG=<Is debug mode or prod? True or False>
 
-ENGINE=<DB engine>
-NAME=<DB name>
-USER=<DB user>
-PASSWORD=<DB password>
-HOST=<DB localhost>
-PORT=<DB port>
+SECRET_KEY=\<your secret key. Any string.\>
+
+DEBUG=\<Is debug mode or prod? True or False\>
+
+ENGINE=\<DB engine\>
+
+NAME=\<DB name\>
+
+USER=\<DB user\>
+
+PASSWORD=\<DB password\>
+
+HOST=\<DB localhost\>
+
+PORT=\<DB port\>
+
 
 После этого запустить start.bat.
