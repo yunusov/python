@@ -1,9 +1,10 @@
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect, render
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, serializers
 
+from store_app.forms import CategoryForm
 from store_app.models import Category
 
 
@@ -51,6 +52,22 @@ class CategoryView(APIView):
             },
             status=status.HTTP_201_CREATED,
         )
+    
+class CategoryAddView(APIView):
+    def get(self, request):
+        form = CategoryForm()
+        context = {"form": form}
+        return render(request, "category_add.html", context=context)
+
+    def post(self, request):
+        """Добавить продукт"""
+        form = CategoryForm(request.POST)
+        if form.is_valid():
+            Category.objects.create(
+                name=form.cleaned_data["name"],
+                description=form.cleaned_data["description"],
+            )
+            return redirect("index")
 
 
 class CategoryIdView(APIView):

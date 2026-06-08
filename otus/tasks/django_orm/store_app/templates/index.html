@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}Главная страница{% endblock %}
+
+{% block content %}
+    <h1>Добро пожаловать в Store App!</h1>
+    <a href="{% url 'product_add' %}" class="btn btn-secondary mt-3">Добавить продукт</a>
+    <a href="{% url 'category_add' %}" class="btn btn-secondary mt-3">Добавить категорию</a>
+    <br><br>
+    <ul class="list-group">
+        {% for product in products %}
+            <li class="list-group-item">
+                <h5><a href="{% url 'product_detail' product.id %}">{{ product.name }}</a></h5>
+                <p>{{ product.description|truncatechars:30 }}</p>
+                <small>Цена: {{ product.price }} | Категория: {{ product.category }}</small>
+                <p><a href="{% url 'product_edit' product.id %}" class="btn btn-warning mt-3">Редактировать</a></p>
+            </li>
+        {% empty %}
+            <p>Товаров пока нет</p>
+        {% endfor %}
+    </ul>
+{% endblock %}

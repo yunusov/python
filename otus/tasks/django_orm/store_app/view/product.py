@@ -1,13 +1,16 @@
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render, redirect
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status, serializers
 
-from store_app.models import Product, Category
 from store_app.loguru_config import AppLogger
+from store_app.models import Product, Category
+from store_app.forms import ProductEditForm, ProductForm
+from store_app.repository.product_repository import ProductRepository
 
 logger = AppLogger().get_logger()
+pr = ProductRepository()
 
 
 class ProductSerializer(serializers.Serializer):
@@ -29,17 +32,7 @@ class ProductSerializer(serializers.Serializer):
 class ProductView(APIView):
     def get(self, request):
         """Показать все продукты"""
-        product = Product.objects.all()
-        result = [
-            {
-                "id": c.id,
-                "name": c.name,
-                "description": c.description,
-                "price": c.price,
-                "category": c.category.id,
-            }
-            for c in product
-        ]
+        result = pr.get_all_products
         return Response(result)
 
     @swagger_auto_schema(request_body=ProductSerializer)
@@ -71,6 +64,62 @@ class ProductView(APIView):
             },
             status=status.HTTP_201_CREATED,
         )
+
+
+class ProductDetailView(APIView):
+    def get(self, request, product_id):
+        """Показать продукт"""
+        logger.info(f"Показать продукт {product_id}")
+        product = pr.get_product(product_id)
+        context = {
+            "product": product,
+        }
+        return render(request, "product_detail.html", context)
+
+
+class ProductEditView(APIView):
+    def get(self, request, product_id):
+        product = (
+            Product.objects.select_related("category").filter(id=product_id).first()
+        )
+        form = ProductEditForm(instance=product)
+        context = {"form": form, "title": "Редактирование продукта"}
+        return render(request, "product_edit.html", context=context)
+
+    def post(self, request, product_id):
+        """Редактировать продукт"""
+        logger.info(f"Редактировать продукт {product_id}")
+        product = (
+            Product.objects.select_related("category").filter(id=product_id).first()
+        )
+        form = ProductEditForm(request.POST, instance=product)
+        if form.is_valid():
+            form.save()
+            return redirect("index")
+        context = {
+            "form": form,
+            "title": "Редактировать пост",
+        }
+        return render(request, "product_edit.html", context=context)
+
+
+class ProductAddView(APIView):
+    def get(self, request):
+        form = ProductForm()
+        context = {"form": form}
+        return render(request, "product_add.html", context=context)
+
+    def post(self, request):
+        """Добавить продукт"""
+        form = ProductForm(request.POST)
+        if form.is_valid():
+            Product.objects.create(
+                name=form.cleaned_data["name"],
+                description=form.cleaned_data["description"],
+                price=form.cleaned_data["price"],
+                category=form.cleaned_data["category"],
+            )
+            return redirect("index")
 
 
 class ProductIdView(APIView):
