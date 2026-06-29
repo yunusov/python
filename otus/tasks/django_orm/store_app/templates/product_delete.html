@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+    <h1>Вы уверены, что хотите удалить пост '{{ product.name }}'?</h1>
+
+    <form method="post" class="mt-4">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Удалить</button>
+    </form>
+    <a href="{% url 'index' %}" class="btn btn-secondary mt-3">Отмена</a>
+{% endblock %}

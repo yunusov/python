@@ -5,6 +5,7 @@ from .product import (
     ProductAddView,
     ProductDetailView,
     ProductEditView,
+    ProductDeleteView,
 )
 from .main_views import IndexView, AboutView
 
@@ -19,4 +20,5 @@ __all__ = [
     "ProductIdView",
     "AboutView",
     "ProductEditView",
+    "ProductDeleteView",
 ]

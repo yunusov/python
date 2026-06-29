@@ -13,7 +13,10 @@
                 <h5><a href="{% url 'product_detail' product.id %}">{{ product.name }}</a></h5>
                 <p>{{ product.description|truncatechars:30 }}</p>
                 <small>Цена: {{ product.price }} | Категория: {{ product.category }}</small>
-                <p><a href="{% url 'product_edit' product.id %}" class="btn btn-warning mt-3">Редактировать</a></p>
+                <p>
+                    <a href="{% url 'product_edit' product.id %}" class="btn btn-warning mt-3">Редактировать</a>
+                    <a href="{% url 'product_delete' product.id %}" class="btn btn-danger mt-3">Удалить</a>
+                </p>
             </li>
         {% empty %}
             <p>Товаров пока нет</p>

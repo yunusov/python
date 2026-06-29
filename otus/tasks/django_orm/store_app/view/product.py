@@ -2,11 +2,14 @@ from django.shortcuts import get_object_or_404, render, redirect
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.views.generic import DetailView, CreateView, UpdateView, DeleteView
 from rest_framework import status, serializers
+from django.urls import reverse_lazy
+from django.contrib import messages
 
 from store_app.loguru_config import AppLogger
 from store_app.models import Product, Category
-from store_app.forms import ProductEditForm, ProductForm
+from store_app.forms import ProductEditForm
 from store_app.repository.product_repository import ProductRepository
 
 logger = AppLogger().get_logger()
@@ -32,7 +35,7 @@ class ProductSerializer(serializers.Serializer):
 class ProductView(APIView):
     def get(self, request):
         """Показать все продукты"""
-        result = pr.get_all_products
+        result = pr.get_all_products()
         return Response(result)
 
     @swagger_auto_schema(request_body=ProductSerializer)
@@ -66,60 +69,36 @@ class ProductView(APIView):
         )
 
 
-class ProductDetailView(APIView):
-    def get(self, request, product_id):
-        """Показать продукт"""
-        logger.info(f"Показать продукт {product_id}")
-        product = pr.get_product(product_id)
-        context = {
-            "product": product,
-        }
-        return render(request, "product_detail.html", context)
+class ProductDetailView(DetailView):
+    model = Product
+    template_name = 'product_detail.html'
+    context_object_name = 'product'
 
 
-class ProductEditView(APIView):
-    def get(self, request, product_id):
-        product = (
-            Product.objects.select_related("category").filter(id=product_id).first()
-        )
-        form = ProductEditForm(instance=product)
-        context = {"form": form, "title": "Редактирование продукта"}
-        return render(request, "product_edit.html", context=context)
-
-    def post(self, request, product_id):
-        """Редактировать продукт"""
-        logger.info(f"Редактировать продукт {product_id}")
-        product = (
-            Product.objects.select_related("category").filter(id=product_id).first()
-        )
-        form = ProductEditForm(request.POST, instance=product)
-        if form.is_valid():
-            form.save()
-            return redirect("index")
-        context = {
-            "form": form,
-            "title": "Редактировать пост",
-        }
-        return render(request, "product_edit.html", context=context)
+class ProductEditView(UpdateView):
+    """Редактирование поста."""
+    model = Product
+    template_name = 'product_edit.html'
+    form_class = ProductEditForm
+    success_url = reverse_lazy('index')
 
 
-class ProductAddView(APIView):
-    def get(self, request):
-        form = ProductForm()
-        context = {"form": form}
-        return render(request, "product_add.html", context=context)
+    def form_valid(self, form):
+        messages.success(self.request, 'Продукт успешно изменён')
+        return super().form_valid(form)
 
-    def post(self, request):
-        """Добавить продукт"""
-        form = ProductForm(request.POST)
-        if form.is_valid():
-            Product.objects.create(
-                name=form.cleaned_data["name"],
-                description=form.cleaned_data["description"],
-                price=form.cleaned_data["price"],
-                category=form.cleaned_data["category"],
-            )
-            return redirect("index")
+
+class ProductAddView(CreateView):
+    """Добавление нового поста."""
+    model = Product
+    template_name = 'product_add.html'
+    form_class = ProductEditForm
+    success_url = reverse_lazy('index')
+
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Продукт успешно создан')
+        return super().form_valid(form)
 
 
 class ProductIdView(APIView):
@@ -160,3 +139,16 @@ class ProductIdView(APIView):
         product = get_object_or_404(Product, pk=pk)
         product.delete()
         return Response({})
+    
+
+class ProductDeleteView(DeleteView):
+    """Удаление продукта."""
+    model = Product
+    template_name = 'product_delete.html'
+    success_url = reverse_lazy('index')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data( **kwargs)
+        context['title'] = "Удалить продукт"
+        return context
+    

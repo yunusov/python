@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     # My apps
     "store_app.apps.StoreAppConfig",
     "drf_yasg",
+    "rest_framework",
 ]
 
 MIDDLEWARE = [
@@ -120,3 +121,5 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = "static/"
+
+SWAGGER_USE_COMPAT_RENDERERS = False

@@ -1,6 +1,8 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
+from django.views.generic import ListView
 
+from store_app.models import Product
 from store_app.repository.product_repository import ProductRepository
 
 pr = ProductRepository()
@@ -22,11 +24,7 @@ class AboutView(APIView):
         )
 
 
-class IndexView(APIView):
-    def get(self, request):
-        """Страница index"""
-        products = pr.get_all_products()
-        context = {
-            "products": products,
-        }
-        return render(request, "index.html", context)
+class IndexView(ListView):
+    model = Product
+    template_name = "index.html"
+    context_object_name = 'products'

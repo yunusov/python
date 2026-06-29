@@ -8,6 +8,7 @@ from store_app.view import (
     ProductAddView,
     ProductDetailView,
     ProductEditView,
+    ProductDeleteView,
     ProductView,
     ProductIdView,
     IndexView,
@@ -21,7 +22,8 @@ urlpatterns = [
     path("category/<int:pk>/", CategoryIdView.as_view(), name="category_id"),
     path("product/", ProductView.as_view(), name="product"),
     path("product/create/", ProductAddView.as_view(), name="product_add"),
-    path("product/<int:product_id>/", ProductDetailView.as_view(), name="product_detail"),
-    path("product/<int:product_id>/edit/", ProductEditView.as_view(), name="product_edit"),
+    path("product/<int:pk>/", ProductDetailView.as_view(), name="product_detail"),
+    path("product/<int:pk>/edit/", ProductEditView.as_view(), name="product_edit"),
+    path("product/<int:pk>/delete/", ProductDeleteView.as_view(), name="product_delete"),
     path("api/product/<int:pk>/", ProductIdView.as_view(), name="product_id"),
 ]

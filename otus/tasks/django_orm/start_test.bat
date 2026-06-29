@@ -1,0 +1,1 @@
+pytest ./store_app/tests -vv
