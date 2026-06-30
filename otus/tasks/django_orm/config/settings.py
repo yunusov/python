@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "store_app.apps.StoreAppConfig",
     "drf_yasg",
     "rest_framework",
+    "django_celery_results",
 ]
 
 MIDDLEWARE = [
@@ -123,3 +124,14 @@ USE_TZ = True
 STATIC_URL = "static/"
 
 SWAGGER_USE_COMPAT_RENDERERS = False
+
+
+CELERY_BROKER_URL = settings.REDIS_URL
+CELERY_RESULT_BACKEND = 'django-db'
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'admin@gmail.com'
+EMAIL_HOST_PASSWORD = 'password'

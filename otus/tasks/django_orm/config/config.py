@@ -5,6 +5,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     SECRET_KEY: str
+    REDIS_URL: str
     DEBUG: bool = False
 
     ENGINE: str

@@ -1,4 +1,5 @@
 import pytest
+from config.celery import app
 from store_app.models import Category, Product
 
 
@@ -10,6 +11,7 @@ def category_1():
 @pytest.fixture
 def category_2():
     return Category.objects.create(name="Category 2")
+
 
 @pytest.fixture
 def category_delete():
@@ -54,3 +56,13 @@ def product_delete(category_2):
         price=1150,
         category=category_2,
     )
+
+
+@pytest.fixture
+def celery_test_app():
+    """Fixture to create a Celery app in test mode."""
+    app.conf.update(
+        task_always_eager=True,
+        task_eager_propagates=True,
+    )  # Run tasks synchronously
+    return app

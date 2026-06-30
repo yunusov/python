@@ -1,4 +1,4 @@
-from django.shortcuts import get_object_or_404, render, redirect
+from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -11,6 +11,7 @@ from store_app.loguru_config import AppLogger
 from store_app.models import Product, Category
 from store_app.forms import ProductEditForm
 from store_app.repository.product_repository import ProductRepository
+from store_app.tasks import send_info_email
 
 logger = AppLogger().get_logger()
 pr = ProductRepository()
@@ -98,6 +99,7 @@ class ProductAddView(CreateView):
 
     def form_valid(self, form):
         messages.success(self.request, 'Продукт успешно создан')
+        send_info_email.delay("user@mail.ru", "Продукт создан", str(form.instance))
         return super().form_valid(form)
 
 
