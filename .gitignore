@@ -7,3 +7,6 @@ test.py
 .env
 uv.lock
 .vscode
+poetry.lock
+*.gz
+**/data/*
