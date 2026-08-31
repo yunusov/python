@@ -5,8 +5,10 @@
 **/logs/*
 test.py
 .env
+.venv
 uv.lock
 .vscode
 poetry.lock
 *.gz
+*.log
 **/data/*

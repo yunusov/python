@@ -1,0 +1,41 @@
+<html>
+<body>
+<table id="myTable" class="tablesorter">
+  <thead>
+    <tr>
+      <th>URL</th>
+      <th>count</th>
+      <th>count_perc</th>
+      <th>time_sum</th>
+      <th>time_perc</th>
+      <th>time_avg</th>
+      <th>time_max</th>
+      <th>time_med</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for item in items %}
+    <tr>
+      <td>{{ item.URL }}</td>
+      <td>{{ item.count }}</td>
+      <td>{{ item.count_perc }}</td>
+      <td>{{ item.time_sum }}</td>
+      <td>{{ item.time_perc }}</td>
+      <td>{{ item.time_avg }}</td>
+      <td>{{ item.time_max }}</td>
+      <td>{{ item.time_med }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<script src="./jquery.min.js"></script>
+<script src="./jquery.tablesorter.min.js"></script>
+<script type="text/javascript">
+  $(document).ready(function() {
+    $("#myTable").tablesorter({sortList: [[2,1],[2,0]]});
+  });
+</script>
+</body>
+
+</html>

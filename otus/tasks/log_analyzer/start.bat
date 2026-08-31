@@ -1,1 +1,1 @@
-poetry run main-run
+poetry run main-run --config src/log_analyzer/config1.json

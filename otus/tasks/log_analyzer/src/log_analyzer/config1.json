@@ -1,0 +1,5 @@
+{
+    "logfile": "logg.log",
+    "log_dir": "LOG_DIR",
+    "report_dir": "REPORT_DIR"
+}
