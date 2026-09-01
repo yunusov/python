@@ -7,11 +7,11 @@ from structlog.processors import JSONRenderer
 from structlog.stdlib import LoggerFactory
 
 
-def structlog_configure(logfile: str, logdir: str):
+def structlog_configure(logfile: str):
     if logfile:
-        os.makedirs(logdir, exist_ok=True)
+        os.makedirs("logs", exist_ok=True)
         logging.basicConfig(
-            filename=logdir + "/" + logfile,
+            filename="logs/" + logfile,
             encoding="utf-8",
             level=logging.DEBUG,
         )
@@ -39,7 +39,7 @@ def get_renderer(logfile: str) -> JSONRenderer | ConsoleRenderer:
     """
 
     if logfile:
-        return JSONRenderer()
+        return JSONRenderer(ensure_ascii=False)
 
     return ConsoleRenderer(colors=True)
 

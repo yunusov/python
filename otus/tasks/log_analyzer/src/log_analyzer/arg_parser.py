@@ -24,6 +24,7 @@ def parse_args() -> dict:
         args.config,
         result.get("config_file", ""),
     )
+    result.update(config_json)
 
     # Переопределяем настройки
     args_logfile = args.logfile

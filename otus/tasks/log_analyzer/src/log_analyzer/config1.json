@@ -1,5 +1,6 @@
 {
     "logfile": "logg.log",
     "log_dir": "LOG_DIR",
-    "report_dir": "REPORT_DIR"
+    "report_dir": "REPORT_DIR",
+    "max_fail_prc": 100
 }

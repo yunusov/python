@@ -12,12 +12,14 @@ def main():
         cfg = parse_args()
         structlog_configure(
             cfg.get("logfile", ""),
-            cfg.get("log_dir", ""),
         )
-        render_html(cfg.get("report_dir", ""))
+        render_html(
+            cfg.get("report_dir", ""),
+            cfg.get("max_fail_prc", 100),
+        )
     except Exception:
         print(traceback.format_exc())
-        log.error(traceback.format_exc())    
+        log.error(traceback.format_exc())
 
 
 if __name__ == "__main__":

@@ -1,6 +1,15 @@
 <html>
+<header>
+  <style>
+    td, th {
+      text-align: center;
+      vertical-align: middle;
+    }
+    .url-col { text-align: left; }
+  </style>
+</header>
 <body>
-<table id="myTable" class="tablesorter">
+<table id="myTable" class="tablesorter" border=1>
   <thead>
     <tr>
       <th>URL</th>
@@ -16,7 +25,7 @@
   <tbody>
   {% for item in items %}
     <tr>
-      <td>{{ item.URL }}</td>
+      <td class="url-col">{{ item.URL }}</td>
       <td>{{ item.count }}</td>
       <td>{{ item.count_perc }}</td>
       <td>{{ item.time_sum }}</td>
@@ -33,7 +42,7 @@
 <script src="./jquery.tablesorter.min.js"></script>
 <script type="text/javascript">
   $(document).ready(function() {
-    $("#myTable").tablesorter({sortList: [[2,1],[2,0]]});
+    $("#myTable").tablesorter({sortList: [[0,0]]});
   });
 </script>
 </body>
