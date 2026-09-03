@@ -1,8 +1,7 @@
 import datetime
-
-import glob
-import os
+import gzip
 import re
+from pathlib import Path
 from statistics import median
 
 LOG_LINE_RE = re.compile(
@@ -16,26 +15,30 @@ LOG_LINE_RE = re.compile(
 
 URL_RE = re.compile(r"\S+\s+(?P<url>\S+)")
 
+LOGFILE_RE = re.compile(r"nginx-access-ui.log-(?P<date>\d{8})(?P<ext>.gz)?")
 
-def find_datalog() -> tuple[str, datetime.datetime]:
-    dir_path = "LOG_DIR"
+
+def find_datalog(dir_path: str) -> tuple[str | None, datetime.datetime]:
     # Только файлы с расширением .gz
     # to-do: убрать glob
-    gz_files = glob.glob(os.path.join(dir_path, "nginx-access-ui.log-????????.gz"))
-    # Только файлы логов
-    log_files = glob.glob(os.path.join(dir_path, "nginx-access-ui.log-????????"))
+    directory = Path(dir_path)
     result_file = ""
     result_date = datetime.datetime.strptime("19000101", "%Y%m%d").replace(
         tzinfo=datetime.UTC
     )
-    for file in log_files:
-        log_date = datetime.datetime.strptime(file[-8:], "%Y%m%d").replace(
-            tzinfo=datetime.UTC
-        )
-        if (result_file is None) or (log_date > result_date):
-            result_file = file
-            result_date = log_date
-    return (result_file, result_date)
+    for entry in directory.iterdir():
+        if entry.is_file():
+            m = LOGFILE_RE.search(entry.name)
+            if not m:
+                continue
+            str_date = m.group("date")
+            log_date = datetime.datetime.strptime(str_date, "%Y%m%d").replace(
+                tzinfo=datetime.UTC
+            )
+            if (result_file is None) or (log_date > result_date):
+                result_file = entry.name
+                result_date = log_date
+    return (dir_path + "/" + result_file if result_file else None, result_date)
 
 
 def parse_file(file: str, max_fail_prc: int):
@@ -45,13 +48,13 @@ def parse_file(file: str, max_fail_prc: int):
     """
     total_lines = count_lines(file)
     cnt_fails = 0
-    with open(file, "r", encoding="utf-8") as f:
+    print(f"parse_file {file = }")
+    fileopener = gzip.open if file[-3:] == ".gz" else open
+    with fileopener(file, "rt", encoding="utf-8") as f:
         for line in f:
-            fails_prc = 100 * cnt_fails / total_lines
-            if fails_prc >= max_fail_prc:
-                raise RuntimeError("Достигнут максимальный уровень ошибочных записей! Скрипт остановлен.")
-            
-            m = LOG_LINE_RE.search(line)
+            print(f"{line = }")
+
+            m = LOG_LINE_RE.search(str(line))
             if not m:
                 cnt_fails += 1
                 continue
@@ -59,13 +62,21 @@ def parse_file(file: str, max_fail_prc: int):
             if not url_m:
                 cnt_fails += 1
                 continue
-            
+
             yield url_m.group("url"), float(m.group("request_time"))
+    fails_prc = 100 * cnt_fails / total_lines
+    if fails_prc >= max_fail_prc:
+        raise RuntimeError(
+            "Достигнут максимальный уровень ошибочных записей! Скрипт остановлен."
+        )
+
 
 def count_lines(filename):
     result = 0
-    with open(filename, 'r') as f:
+    fileopener = gzip.open if filename[-3:] == ".gz" else open
+    with fileopener(filename, "r") as f:
         result = sum(1 for line in f)
+    print(f"count_lines {result = }")
     return result
 
 

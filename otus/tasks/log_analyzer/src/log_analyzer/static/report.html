@@ -22,26 +22,44 @@
       <th>time_med</th>
     </tr>
   </thead>
-  <tbody>
-  {% for item in items %}
-    <tr>
-      <td class="url-col">{{ item.URL }}</td>
-      <td>{{ item.count }}</td>
-      <td>{{ item.count_perc }}</td>
-      <td>{{ item.time_sum }}</td>
-      <td>{{ item.time_perc }}</td>
-      <td>{{ item.time_avg }}</td>
-      <td>{{ item.time_max }}</td>
-      <td>{{ item.time_med }}</td>
-    </tr>
-  {% endfor %}
+  <tbody id="tableBody">
   </tbody>
 </table>
 
-<script src="./jquery.min.js"></script>
-<script src="./jquery.tablesorter.min.js"></script>
+<script src="./static/jquery.min.js"></script>
+<script src="./static/jquery.tablesorter.min.js"></script>
 <script type="text/javascript">
   $(document).ready(function() {
+    var tableData = $table_json;
+
+    var tbody = document.getElementById("tableBody");
+    tableData.forEach(function(item) {
+      var tr = document.createElement("tr");
+
+      var cells = [
+        item.URL,
+        item.count,
+        item.count_perc,
+        item.time_sum,
+        item.time_perc,
+        item.time_avg,
+        item.time_max,
+        item.time_med
+      ];
+
+      cells.forEach(function(value, i) {
+        var td = document.createElement("td");
+        if (i === 0) {
+          td.className = "url-col";  // левое выравнивание URL
+        }
+        td.textContent = value;      // безопасная вставка без HTML-инъекций
+        tr.appendChild(td);
+      });
+
+      tbody.appendChild(tr);
+    });
+
+    // Инициализируем сортировку ПОСЛЕ заполнения строк
     $("#myTable").tablesorter({sortList: [[0,0]]});
   });
 </script>

@@ -15,6 +15,7 @@ def main():
         )
         render_html(
             cfg.get("report_dir", ""),
+            cfg.get("log_dir", ""),
             cfg.get("max_fail_prc", 100),
         )
     except Exception:
