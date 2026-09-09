@@ -5,10 +5,9 @@ description = "OTUS.Python Pro.HW#1"
 authors = [
     {name = "v.yunusov",email = "v300187@yandex.ru"}
 ]
-requires-python = ">=3.14"
+requires-python = ">=3.11"
 dependencies = [
     "structlog (>=26.1.0,<27.0.0)",
-    "colorama (>=0.4.6,<0.5.0)",
 ]
 
 
@@ -18,3 +17,10 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 main-run = "log_analyzer.main:main"
+
+[dependency-groups]
+dev = [
+    "pytest (>=8.0.0,<9.0.0)",
+    "pytest-cov (>=7.1.0,<8.0.0)",
+    "ruff (>=0.16.6,<0.17.0)",
+]

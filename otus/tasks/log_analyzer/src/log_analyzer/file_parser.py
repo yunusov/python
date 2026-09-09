@@ -4,6 +4,12 @@ import re
 from pathlib import Path
 from statistics import median
 
+from structlog import get_logger
+
+from .log_file import LogFile
+
+log = get_logger()
+
 LOG_LINE_RE = re.compile(
     r"\[(?P<time_local>[^\]]+)\] "
     r'"(?P<request>[^"]*)" '
@@ -15,45 +21,56 @@ LOG_LINE_RE = re.compile(
 
 URL_RE = re.compile(r"\S+\s+(?P<url>\S+)")
 
-LOGFILE_RE = re.compile(r"nginx-access-ui.log-(?P<date>\d{8})(?P<ext>.gz)?")
+LOGFILE_RE = re.compile(r"nginx-access-ui\.log-(?P<date>\d{8})(?P<ext>\.gz)?$")
 
 
-def find_datalog(dir_path: str) -> tuple[str | None, datetime.datetime]:
+def find_datalog(dir_path: str) -> LogFile:
     # Только файлы с расширением .gz
     # to-do: убрать glob
     directory = Path(dir_path)
+    print(f"{directory.absolute() = }")
     result_file = ""
+    ext_file = ""
     result_date = datetime.datetime.strptime("19000101", "%Y%m%d").replace(
         tzinfo=datetime.UTC
     )
-    for entry in directory.iterdir():
-        if entry.is_file():
-            m = LOGFILE_RE.search(entry.name)
-            if not m:
-                continue
-            str_date = m.group("date")
-            log_date = datetime.datetime.strptime(str_date, "%Y%m%d").replace(
-                tzinfo=datetime.UTC
-            )
-            if (result_file is None) or (log_date > result_date):
-                result_file = entry.name
-                result_date = log_date
-    return (dir_path + "/" + result_file if result_file else None, result_date)
+    try:
+        for entry in directory.iterdir():
+            if entry.is_file():
+                m = LOGFILE_RE.fullmatch(entry.name)
+                if not m:
+                    continue
+                str_date = m.group("date")
+                log_date = datetime.datetime.strptime(str_date, "%Y%m%d").replace(
+                    tzinfo=datetime.UTC
+                )
+                if (result_file is None) or (log_date > result_date):
+                    result_file = entry.name
+                    result_date = log_date
+                    ext_file = m.group("ext")
+    except FileNotFoundError as e:
+        log.error(e)
+        raise                         
+    return LogFile(
+        dir_path + "/" + result_file if result_file else None,
+        result_date,
+        ext_file,
+    )
 
 
-def parse_file(file: str, max_fail_prc: int):
+def parse_file(logfile: LogFile, max_fail_prc: int):
     """Генератор: читает лог и отдаёт пары (url, request_time) для корректных строк.
 
     Строки, которые не получилось разобрать (битые/не по формату), пропускаются.
     """
-    total_lines = count_lines(file)
     cnt_fails = 0
-    print(f"parse_file {file = }")
-    fileopener = gzip.open if file[-3:] == ".gz" else open
-    with fileopener(file, "rt", encoding="utf-8") as f:
+    total_lines = 0
+    if logfile.path is None:
+        return
+    fileopener = gzip.open if logfile.ext == ".gz" else open
+    with fileopener(logfile.path, "rt", encoding="utf-8") as f:
         for line in f:
-            print(f"{line = }")
-
+            total_lines += 1
             m = LOG_LINE_RE.search(str(line))
             if not m:
                 cnt_fails += 1
@@ -64,6 +81,8 @@ def parse_file(file: str, max_fail_prc: int):
                 continue
 
             yield url_m.group("url"), float(m.group("request_time"))
+    if total_lines == 0:
+        return
     fails_prc = 100 * cnt_fails / total_lines
     if fails_prc >= max_fail_prc:
         raise RuntimeError(
@@ -71,25 +90,18 @@ def parse_file(file: str, max_fail_prc: int):
         )
 
 
-def count_lines(filename):
-    result = 0
-    fileopener = gzip.open if filename[-3:] == ".gz" else open
-    with fileopener(filename, "r") as f:
-        result = sum(1 for line in f)
-    print(f"count_lines {result = }")
-    return result
-
-
 def prepare_json(data: dict) -> list[dict]:
     result: list[dict] = []
-    total_count = sum([len(data[i]) for i in data])
-    total_time_sum = sum([sum(data[i]) for i in data])
+    total_count = sum(len(data[i]) for i in data)
+    total_time_sum = sum(sum(data[i]) for i in data)
     for url, value in data.items():
         count = len(value)
-        count_perc = round(100 * count / total_count, 2)
+        count_perc = round(100 * count / total_count, 2) if total_count != 0 else 0
         time_sum = round(sum(value), 2)
-        time_perc = round(100 * time_sum / total_time_sum, 2)
-        time_avg = round(time_sum / count, 2)
+        time_perc = (
+            round(100 * time_sum / total_time_sum, 2) if total_time_sum != 0 else 0
+        )
+        time_avg = round(time_sum / count, 2) if count != 0 else 0
         time_max = round(max(value), 2)
         time_med = round(median(value), 2)
         result.append(
@@ -104,4 +116,5 @@ def prepare_json(data: dict) -> list[dict]:
                 "time_med": time_med,
             }
         )
+    result.sort(key=lambda x: x["time_sum"], reverse=True)
     return result

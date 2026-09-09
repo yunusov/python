@@ -1,1 +1,1 @@
-poetry run main-run --config src/log_analyzer/config1.json
+make -f docs/Makefile run

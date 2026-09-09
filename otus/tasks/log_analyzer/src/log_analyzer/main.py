@@ -7,7 +7,7 @@ from . import parse_args, render_html, structlog_configure
 log = get_logger()
 
 
-def main():
+def main() -> int:
     try:
         cfg = parse_args()
         structlog_configure(
@@ -17,11 +17,14 @@ def main():
             cfg.get("report_dir", ""),
             cfg.get("log_dir", ""),
             cfg.get("max_fail_prc", 100),
+            cfg.get("report_size", 100),
         )
+        return 0
     except Exception:
-        print(traceback.format_exc())
+        log.exception("Ошибка выполнения анализатора")
         log.error(traceback.format_exc())
+        return 1
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

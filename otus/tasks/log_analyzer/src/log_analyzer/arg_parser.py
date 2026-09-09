@@ -11,7 +11,8 @@ config = {
     "log_dir": "LOG_DIR",
     "report_dir": "REPORT_DIR",
     "config_file": "src/log_analyzer/config.json",
-    "data_dir": "data"
+    "max_fail_prc": 100,
+    "report_size": 100,
 }
 
 
@@ -28,12 +29,7 @@ def parse_args() -> dict:
 
     # Переопределяем настройки
     args_logfile = args.logfile
-    conf_logfile = config_json.get("logfile", "")
-    result["logfile"] = (
-        args_logfile
-        if args_logfile
-        else conf_logfile if conf_logfile else result["logfile"]
-    )
+    result["logfile"] = args_logfile or config_json.get("logfile") or result["logfile"]
 
     return result
 

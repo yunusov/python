@@ -1,15 +1,20 @@
 <html>
-<header>
+<head>
   <style>
     td, th {
       text-align: center;
       vertical-align: middle;
+      border: 1px solid black;
+    }
+    table {
+      border-collapse: collapse;
+      border: 1px solid black;
     }
     .url-col { text-align: left; }
   </style>
-</header>
+</head>
 <body>
-<table id="myTable" class="tablesorter" border=1>
+<table id="myTable" class="tablesorter">
   <thead>
     <tr>
       <th>URL</th>
@@ -60,7 +65,7 @@
     });
 
     // Инициализируем сортировку ПОСЛЕ заполнения строк
-    $("#myTable").tablesorter({sortList: [[0,0]]});
+    $("#myTable").tablesorter({sortList: [[3,1]]});
   });
 </script>
 </body>
