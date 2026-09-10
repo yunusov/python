@@ -19,16 +19,13 @@ LOG_LINE_RE = re.compile(
     r"(?P<tail>.*) (?P<request_time>\d+\.\d+)\s*$"
 )
 
-URL_RE = re.compile(r"\S+\s+(?P<url>\S+)")
+URL_RE = re.compile(r"\S+\s+(?P<url>/\S*)")
 
 LOGFILE_RE = re.compile(r"nginx-access-ui\.log-(?P<date>\d{8})(?P<ext>\.gz)?$")
 
 
 def find_datalog(dir_path: str) -> LogFile:
-    # Только файлы с расширением .gz
-    # to-do: убрать glob
     directory = Path(dir_path)
-    print(f"{directory.absolute() = }")
     result_file = ""
     ext_file = ""
     result_date = datetime.datetime.strptime("19000101", "%Y%m%d").replace(
