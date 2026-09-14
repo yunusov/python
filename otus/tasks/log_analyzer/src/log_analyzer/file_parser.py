@@ -1,10 +1,13 @@
 import datetime
 import gzip
 import re
+from collections.abc import Callable
 from pathlib import Path
 from statistics import median
+from typing import Any
 
 from structlog import get_logger
+from tqdm import tqdm
 
 from .log_file import LogFile
 
@@ -47,7 +50,7 @@ def find_datalog(dir_path: str) -> LogFile:
                     ext_file = m.group("ext")
     except FileNotFoundError as e:
         log.error(e)
-        raise                         
+        raise
     return LogFile(
         dir_path + "/" + result_file if result_file else None,
         result_date,
@@ -64,9 +67,20 @@ def parse_file(logfile: LogFile, max_fail_prc: int):
     total_lines = 0
     if logfile.path is None:
         return
-    fileopener = gzip.open if logfile.ext == ".gz" else open
+    path = Path(logfile.path)
+    file_size = path.stat().st_size
+    # open и gzip.open — перегруженные функции с разными наборами сигнатур:
+    # без аннотации mypy выводит тип по первому присваиванию и падает на втором.
+    fileopener: Callable[..., Any] = open
+    if logfile.ext == ".gz":
+        fileopener = gzip.open
+        file_size *= 10
     with fileopener(logfile.path, "rt", encoding="utf-8") as f:
+        pbar = tqdm(
+            total=file_size, desc="Lines processed: ", unit="B", unit_scale=True
+        )
         for line in f:
+            pbar.update(len(line.encode("utf-8")))
             total_lines += 1
             m = LOG_LINE_RE.search(str(line))
             if not m:
@@ -78,6 +92,7 @@ def parse_file(logfile: LogFile, max_fail_prc: int):
                 continue
 
             yield url_m.group("url"), float(m.group("request_time"))
+    pbar.close()
     if total_lines == 0:
         return
     fails_prc = 100 * cnt_fails / total_lines
@@ -93,14 +108,14 @@ def prepare_json(data: dict) -> list[dict]:
     total_time_sum = sum(sum(data[i]) for i in data)
     for url, value in data.items():
         count = len(value)
-        count_perc = round(100 * count / total_count, 2) if total_count != 0 else 0
-        time_sum = round(sum(value), 2)
+        count_perc = round(100 * count / total_count, 3) if total_count != 0 else 0
+        time_sum = round(sum(value), 3)
         time_perc = (
-            round(100 * time_sum / total_time_sum, 2) if total_time_sum != 0 else 0
+            round(100 * time_sum / total_time_sum, 3) if total_time_sum != 0 else 0
         )
-        time_avg = round(time_sum / count, 2) if count != 0 else 0
-        time_max = round(max(value), 2)
-        time_med = round(median(value), 2)
+        time_avg = round(time_sum / count, 3) if count != 0 else 0
+        time_max = round(max(value), 3)
+        time_med = round(median(value), 3)
         result.append(
             {
                 "URL": url,

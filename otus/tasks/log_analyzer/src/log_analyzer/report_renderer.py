@@ -22,12 +22,13 @@ def prepare_dict(data) -> dict[str, list[float]]:
     return result
 
 
-def render_html(
-    report_dir: str,
-    log_dir: str,
-    max_fail_prc: int,
-    report_size: int,
-):
+def render_html(cfg: dict):
+    report_dir = cfg.get("report_dir", "")
+    log_dir = cfg.get("log_dir", "")
+    max_fail_prc = cfg.get("max_fail_prc", 100)
+    report_size = cfg.get("report_size", 100)
+    force = cfg.get("force", False)
+
     logfile = find_datalog(log_dir)
     if logfile.path is None:
         return
@@ -35,7 +36,7 @@ def render_html(
     output_path = (
         TOP_FOLDER / report_dir / f"report-{logfile.date.strftime('%Y.%m.%d')}.html"
     )
-    if os.path.exists(output_path):
+    if os.path.exists(output_path) and not force:
         return
 
     filedata = parse_file(logfile, max_fail_prc)

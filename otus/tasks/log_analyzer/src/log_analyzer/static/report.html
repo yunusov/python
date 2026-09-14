@@ -11,6 +11,17 @@
       border: 1px solid black;
     }
     .url-col { text-align: left; }
+    .url-text {
+      max-width: 250px;         /* ограничение ширины URL-колонки */
+      overflow: hidden;         /* лишнее не показываем */
+      text-overflow: ellipsis;  /* многоточие ... */
+      white-space: nowrap;      /* URL в одну строку */
+    }
+    .url-col:hover .url-text {
+      white-space: normal;      /* при наведении показываем URL целиком */
+      overflow: visible;
+      word-break: break-all;
+    }
   </style>
 </head>
 <body>
@@ -54,10 +65,18 @@
 
       cells.forEach(function(value, i) {
         var td = document.createElement("td");
+
         if (i === 0) {
-          td.className = "url-col";  // левое выравнивание URL
+          td.className = "url-col";   // левое выравнивание URL
+          var wrap = document.createElement("div");
+          wrap.className = "url-text";
+          wrap.textContent = value;   // безопасная вставка без HTML-инъекций
+          wrap.title = value;         // полный URL в подсказке при наведении
+          td.appendChild(wrap);
+        } else {
+          td.textContent = value;     // безопасная вставка без HTML-инъекций
         }
-        td.textContent = value;      // безопасная вставка без HTML-инъекций
+
         tr.appendChild(td);
       });
 

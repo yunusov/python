@@ -13,12 +13,7 @@ def main() -> int:
         structlog_configure(
             cfg.get("logfile", ""),
         )
-        render_html(
-            cfg.get("report_dir", ""),
-            cfg.get("log_dir", ""),
-            cfg.get("max_fail_prc", 100),
-            cfg.get("report_size", 100),
-        )
+        render_html(cfg)
         return 0
     except Exception:
         log.exception("Ошибка выполнения анализатора")

@@ -3,5 +3,6 @@
     "log_dir": "LOG_DIR",
     "report_dir": "REPORT_DIR",
     "max_fail_prc": 100,
-    "report_size": 100
+    "report_size": 500,
+    "force": true
 }

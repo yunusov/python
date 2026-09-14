@@ -1,18 +1,20 @@
 import argparse
 import json
 from pathlib import Path
+from typing import Any
 
 from structlog import get_logger
 
 log = get_logger()
 
-config = {
+config: dict[str, Any] = {
     "logfile": "",
     "log_dir": "LOG_DIR",
     "report_dir": "REPORT_DIR",
     "config_file": "src/log_analyzer/config.json",
     "max_fail_prc": 100,
     "report_size": 100,
+    "force": False,
 }
 
 
@@ -59,7 +61,9 @@ def read_config_json(args_config: str, default_config: str) -> dict:
     try:
         data_path = Path(config_json)
         with data_path.open("r", encoding="utf-8") as f:
-            config_items = json.load(f)
+            config_items: dict = json.load(
+                f
+            )  # json.load -> Any: аннотация гасит no-any-return
     except FileNotFoundError:
         log.error(f"Config file {config_json} not found!")
         raise

@@ -58,6 +58,7 @@ def correct_log_dir_gz():
 
         yield {"root": tmpdir}
 
+
 @pytest.fixture
 def incorrect_log_dir():
     with tempfile.TemporaryDirectory() as tmpdir_str:
@@ -69,9 +70,7 @@ def incorrect_log_dir():
         set_file_modification_time(tmpdir / "readme.txt", now)
 
         (tmpdir / "server.log").write_text("server.log")
-        set_file_modification_time(
-            tmpdir / "server.log", now - 3600
-        )
+        set_file_modification_time(tmpdir / "server.log", now - 3600)
 
         yield {"root": tmpdir}
 
@@ -88,9 +87,9 @@ def correct_plain_file_3_line():
         tmpdir = Path(tmpdir_str)
 
         # Пишем файлы
-        file = (tmpdir / "nginx-access-ui.log-20170630")
+        file = tmpdir / "nginx-access-ui.log-20170630"
         file.write_text(correct_line * 3)
-        
+
         yield {"file": file}
 
 
@@ -98,11 +97,11 @@ def correct_plain_file_3_line():
 def correct_plain_gzfile_3_line():
     with tempfile.TemporaryDirectory() as tmpdir_str:
         tmpdir = Path(tmpdir_str)
-        file = tmpdir / 'nginx-access-ui.log-20170630.gz'
+        file = tmpdir / "nginx-access-ui.log-20170630.gz"
 
-        with gzip.open(file, 'wt', encoding='utf-8') as f:
+        with gzip.open(file, "wt", encoding="utf-8") as f:
             f.write(correct_line * 3)
-        
+
         yield {"file": file}
 
 
@@ -112,9 +111,9 @@ def plain_file_1_good_9_bad_lines():
         tmpdir = Path(tmpdir_str)
 
         # Пишем файлы
-        file = (tmpdir / "nginx-access-ui.log-20170630")
+        file = tmpdir / "nginx-access-ui.log-20170630"
         file.write_text(correct_line + bad_line * 9)
-        
+
         yield {"file": file}
 
 
@@ -122,6 +121,6 @@ def plain_file_1_good_9_bad_lines():
 def empty_file():
     with tempfile.TemporaryDirectory() as tmpdir_str:
         tmpdir = Path(tmpdir_str)
-        file = (tmpdir / "nginx-access-ui.log-20170630")
+        file = tmpdir / "nginx-access-ui.log-20170630"
         file.write_text("")
         yield {"file": file}

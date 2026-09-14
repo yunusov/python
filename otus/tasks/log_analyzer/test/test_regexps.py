@@ -32,15 +32,19 @@ def test_LOGFILE_RE(filename, result, date, ext):
             "0.5",
             "200",
         ),
-        (            
+        (
             '1.169.137.128 -  - [29/Jun/2017:03:50:22 +0300] "GET / HTTP/1.1" aaa 19415 "-" "Slotovod" "-" "1498697422-2118016444-4708-9752769" "712e90144abee9" bbb',
-            False, "", "", ""),
+            False,
+            "",
+            "",
+            "",
+        ),
     ],
 )
 def test_LOG_LINE_RE(logline, result, req, request_time, status):
     m = LOG_LINE_RE.search(logline)
     assert bool(m) == result
-    if (m):
+    if m:
         assert m.group("request") == req
         assert m.group("request_time") == request_time
         assert m.group("status") == status
@@ -57,5 +61,5 @@ def test_LOG_LINE_RE(logline, result, req, request_time, status):
 )
 def test_URL_RE(url, path):
     m = URL_RE.search(url)
-    if (m):
+    if m:
         assert m.group("url") == path
