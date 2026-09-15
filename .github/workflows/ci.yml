@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: lint / format / types / tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: otus/tasks/log_analyzer
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Poetry
+        run: pipx install "poetry>=2.1,<3"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: poetry
+          cache-dependency-path: otus/tasks/log_analyzer/poetry.lock
+
+      - name: Install dependencies
+        run: poetry install --with dev --no-interaction
+
+      - name: Ruff (linter)
+        run: poetry run ruff check src test
+
+      - name: Black (format check)
+        run: poetry run black --check src test
+
+      - name: isort (import order check)
+        run: poetry run isort --check-only src test
+
+      - name: Mypy (type check)
+        run: poetry run mypy src/log_analyzer test
+
+      - name: Tests
+        run: poetry run pytest test -v --cov=src/log_analyzer --cov-report=term-missing
