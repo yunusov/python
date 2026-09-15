@@ -1,0 +1,12 @@
+services:
+  log-analyzer:
+    build: .
+    image: log-analyzer:latest
+    volumes:
+      # входные данные: директория с логами (read-only)
+      - ./LOG_DIR:/data/logs:ro
+      # выходные данные: сюда падает report-YYYY.MM.DD.html + static/
+      - ./REPORT_DIR:/data/reports
+      # свой конфиг (опционально): переопределяет встроенный
+      - ./config-docker.json:/config/config.json:ro
+    command: ["--config", "/config/config.json"]

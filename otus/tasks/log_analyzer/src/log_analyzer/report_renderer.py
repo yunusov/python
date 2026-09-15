@@ -53,10 +53,11 @@ def render_html(cfg: dict):
     rendered_html = template.safe_substitute(table_json=table_json)
 
     # 4. Сохраняем результат
-    os.makedirs(TOP_FOLDER / report_dir / "static", exist_ok=True)
+    static_dir = TOP_FOLDER / report_dir / "static"
+    static_dir.mkdir(parents=True, exist_ok=True)
     for file in extra_files:
-        shutil.copy(
-            PARENT_FOLDER / file,
-            TOP_FOLDER / report_dir / "static",
-        )
+        # copyfile вместо copy: shutil.copy делает copymode (chmod),
+        # который запрещён на bind-mount volume'ах
+        # (Docker Desktop for Windows -> PermissionError EPERM)
+        shutil.copyfile(PARENT_FOLDER / file, static_dir / Path(file).name)
     output_path.write_text(rendered_html, encoding="utf-8")

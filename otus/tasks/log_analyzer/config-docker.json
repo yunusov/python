@@ -1,0 +1,8 @@
+{
+    "logfile": "",
+    "log_dir": "/data/logs",
+    "report_dir": "/data/reports",
+    "max_fail_prc": 100,
+    "report_size": 500,
+    "force": true
+}

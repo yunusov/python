@@ -1,0 +1,28 @@
+# VCS и окружения
+.git/
+.gitignore
+.venv/
+venv/
+
+# Python-артефакты
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# входные/выходные данные — подключаются через volume, в образ не нужны
+LOG_DIR/
+REPORT_DIR/
+logs/
+data/
+
+# инфраструктура и прочее, не участвующее в рантайме
+test/
+docs/
+task
+Makefile
+start.bat
+.pre-commit-config.yaml
+docker-compose.yml
+Dockerfile
