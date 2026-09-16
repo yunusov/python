@@ -1,7 +1,8 @@
 import datetime
 import gzip
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from dataclasses import dataclass
 from pathlib import Path
 from statistics import median
 from typing import Any
@@ -58,48 +59,82 @@ def find_datalog(dir_path: str) -> LogFile:
     )
 
 
-def parse_file(logfile: LogFile, max_fail_prc: int):
-    """Генератор: читает лог и отдаёт пары (url, request_time) для корректных строк.
+@dataclass
+class LogParsingResult:
+    """Итерируемый результат разбора лога с раздельным контролем качества.
 
-    Строки, которые не получилось разобрать (битые/не по формату), пропускаются.
+    Разделение ответственности:
+    - ``__iter__`` — ленивое построчное чтение: отдаёт пары
+      (url, request_time) и попутно накапливает статистику разбора;
+    - ``validate()`` — отдельный контроль качества (доля битых строк),
+      вызывается потребителем после полного чтения файла.
+
+    Так проверка не привязана к моменту исчерпания генератора и не будет
+    молча пропущена, если потребитель прекратил итерацию раньше.
     """
-    cnt_fails = 0
-    total_lines = 0
-    if logfile.path is None:
-        return
-    path = Path(logfile.path)
-    file_size = path.stat().st_size
-    # open и gzip.open — перегруженные функции с разными наборами сигнатур:
-    # без аннотации mypy выводит тип по первому присваиванию и падает на втором.
-    fileopener: Callable[..., Any] = open
-    if logfile.ext == ".gz":
-        fileopener = gzip.open
-        file_size *= 10
-    with fileopener(logfile.path, "rt", encoding="utf-8") as f:
-        pbar = tqdm(
-            total=file_size, desc="Lines processed: ", unit="B", unit_scale=True
-        )
-        for line in f:
-            pbar.update(len(line.encode("utf-8")))
-            total_lines += 1
-            m = LOG_LINE_RE.search(str(line))
-            if not m:
-                cnt_fails += 1
-                continue
-            url_m = URL_RE.search(m.group("request"))
-            if not url_m:
-                cnt_fails += 1
-                continue
 
-            yield url_m.group("url"), float(m.group("request_time"))
-    pbar.close()
-    if total_lines == 0:
-        return
-    fails_prc = 100 * cnt_fails / total_lines
-    if fails_prc >= max_fail_prc:
-        raise RuntimeError(
-            "Достигнут максимальный уровень ошибочных записей! Скрипт остановлен."
-        )
+    logfile: LogFile
+    total_lines: int = 0
+    cnt_fails: int = 0
+
+    def __iter__(self) -> Iterator[tuple[str, float]]:
+        self.total_lines = 0
+        self.cnt_fails = 0
+        if self.logfile.path is None:
+            return
+        path = Path(self.logfile.path)
+        file_size = path.stat().st_size
+        fileopener: Callable[..., Any] = open
+        if self.logfile.ext == ".gz":
+            fileopener = gzip.open
+            file_size *= 10
+        with fileopener(self.logfile.path, "rt", encoding="utf-8") as f:
+            pbar = tqdm(
+                total=file_size, desc="Lines processed: ", unit="B", unit_scale=True
+            )
+            try:
+                for line in f:
+                    pbar.update(len(line.encode("utf-8")))
+                    self.total_lines += 1
+                    m = LOG_LINE_RE.search(str(line))
+                    if not m:
+                        self.cnt_fails += 1
+                        continue
+                    url_m = URL_RE.search(m.group("request"))
+                    if not url_m:
+                        self.cnt_fails += 1
+                        continue
+
+                    yield url_m.group("url"), float(m.group("request_time"))
+            finally:
+                pbar.close()
+
+    @property
+    def fails_prc(self) -> float:
+        return 100 * self.cnt_fails / self.total_lines if self.total_lines else 0.0
+
+    def validate(self, max_fail_prc: int) -> None:
+        """Контроль качества разбора: доля битых строк не выше max_fail_prc.
+
+        Как и требует задание, проверка выполняется один раз — в конце
+        чтения файла (пустой файл проверку не проходит).
+        """
+        if self.total_lines == 0:
+            return
+        if self.fails_prc >= max_fail_prc:
+            raise RuntimeError(
+                "Достигнут максимальный уровень ошибочных записей! Скрипт остановлен."
+            )
+
+
+def parse_file(logfile: LogFile) -> LogParsingResult:
+    """Парсер лога: возвращает итерируемый результат с парной выдачей.
+
+    Итерация лениво читает файл построчно и отдаёт (url, request_time) для
+    корректных строк (битые пропускаются, счётчик ведётся в результате).
+    Контроль качества выполняется отдельно: ``result.validate(max_fail_prc)``.
+    """
+    return LogParsingResult(logfile=logfile)
 
 
 def prepare_json(data: dict) -> list[dict]:

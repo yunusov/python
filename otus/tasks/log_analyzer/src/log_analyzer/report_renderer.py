@@ -39,8 +39,9 @@ def render_html(cfg: dict):
     if os.path.exists(output_path) and not force:
         return
 
-    filedata = parse_file(logfile, max_fail_prc)
-    dictdata = prepare_dict(filedata)
+    parsed = parse_file(logfile)
+    dictdata = prepare_dict(parsed)  # полное чтение лога
+    parsed.validate(max_fail_prc)  # контроль качества разбора — после чтения
     items = prepare_json(dictdata)
 
     items = items[:report_size]
