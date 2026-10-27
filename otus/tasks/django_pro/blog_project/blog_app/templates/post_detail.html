@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+    <h1>{{ post.name }}</h1>
+    <p>Содержимое: {{ post.content }}</p>
+    <p>Автор: {{ post.user.name }}</p>
+    <p>Дата создания: {{ post.created_at }}</p>
+    <p>Дата редактирования: {{ post.updated_at }}</p>
+
+    <br><br>
+    <h3><b>Комментарии:</b></h3>
+
+    {% if comments %}
+        {% for comment in comments %}
+            <div class="comment-item border-bottom py-3" id="comment-{{ comment.id }}">
+                <div class="d-flex align-items-center mb-2">
+                    <b>{{ comment.user.name }}</b><br>
+                    {{ comment.created_at }}
+                </div>
+
+                <!-- Текст комментария (показывается, когда не редактируем) -->
+                <div class="comment-content mb-2" id="comment-content-{{ comment.id }}">
+                    {{ comment.content }}
+                </div>
+
+                <!-- Форма редактирования (скрыта по умолчанию) -->
+                <div class="comment-edit-form mb-2" id="comment-edit-form-{{ comment.id }}" style="display: none;">
+                    <form action="{% url 'blog_app:comment_edit' comment.id %}" method="post">
+                        <textarea
+                            name="content"
+                            class="form-control mb-2"
+                            rows="3"
+                            id="comment-textarea-{{ comment.id }}"
+                        >{{ comment.content }}</textarea>
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-primary">Сохранить</button>
+                        <button type="button" class="btn btn-sm btn-secondary" onclick="cancelEdit({{ comment.id }})">Отменить</button>
+                    </form>
+                </div>
+
+                <!-- Кнопки редактировать/удалить (для своего комментария) -->
+                <div class="comment-actions">
+                    <button type="button" id="comment-edit-btn-{{ comment.id }}" class="btn btn-sm btn-outline-primary" onclick="startEdit({{ comment.id }})">Редактировать</button>
+                    <form action="{% url 'blog_app:comment_delete' comment.id %}" method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" id="comment-delete-btn-{{ comment.id }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Удалить комментарий?')">Удалить</button>
+                    </form>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+       <h5>Комментариев пока нет</h5>
+    {% endif %}
+
+    <!-- Форма создания комментария  -->
+    <div class="comment-form">
+        <h4 class="mb-3">Новый комментарий</h4>
+        <form action="{% url 'blog_app:comment_create' %}" method="post">
+            <input type="hidden" name="post_id" value="{{ post.id }}">
+
+            <div class="form-group mb-3">
+                <textarea
+                    name="content"
+                    class="form-control"
+                    placeholder="Введите комментарий..."
+                    rows="5"
+                    required
+                ></textarea>
+            </div>
+            {% csrf_token %}
+
+            <button type="submit" class="btn btn-primary">Комментировать</button>
+        </form>
+    </div>
+    
+    <script>
+        function startEdit(commentId) {
+            document.getElementById(`comment-content-${commentId}`).style.display = 'none';
+            document.getElementById(`comment-edit-form-${commentId}`).style.display = 'block';
+            document.getElementById(`comment-edit-btn-${commentId}`).hidden = true;
+            document.getElementById(`comment-delete-btn-${commentId}`).hidden = true;
+            document.getElementById(`comment-textarea-${commentId}`).focus();
+        }
+
+        function cancelEdit(commentId) {
+            document.getElementById(`comment-content-${commentId}`).style.display = 'block';
+            document.getElementById(`comment-edit-form-${commentId}`).style.display = 'none';
+            document.getElementById(`comment-edit-btn-${commentId}`).hidden = false;
+            document.getElementById(`comment-delete-btn-${commentId}`).hidden = false;
+        }
+    </script>
+
+{% endblock %}

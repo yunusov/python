@@ -41,7 +41,6 @@ INSTALLED_APPS = [
     # My apps
     "store_app.apps.StoreAppConfig",
     "drf_yasg",
-    "rest_framework",
     "django_celery_results",
 ]
 
