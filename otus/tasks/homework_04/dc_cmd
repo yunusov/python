@@ -12,3 +12,8 @@ docker compose logs blog
 
 #Остановить и удалить контейнеры в т.ч. Volume
 docker compose down -v
+
+# Просмотреть процессы контейнера
+docker top django_pro-blog-1
+
+docker kill --signal=SIGTERM django_pro-blog-1

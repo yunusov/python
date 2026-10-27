@@ -1,0 +1,17 @@
+**/.coverage
+**/__pycache__/*
+**/test*.json
+**/logs/*
+test.py
+.env
+.env.development
+.env.production
+.env.*.local
+.venv
+uv.lock
+.vscode
+*.gz
+*.log
+**/data/*
+**/.gigacode_vsc
+**/redisdata/*

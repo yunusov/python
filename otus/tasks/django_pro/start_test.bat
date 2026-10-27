@@ -1,0 +1,1 @@
+python blog_project\manage.py test blog_app -v 2
